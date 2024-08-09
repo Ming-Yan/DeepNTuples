@@ -1,3 +1,4 @@
+from Configuration.StandardSequences.Eras import eras
 
 import FWCore.ParameterSet.Config as cms
 
@@ -16,7 +17,7 @@ options.register('nJobs', 1, VarParsing.VarParsing.multiplicity.singleton, VarPa
 options.register('reportEvery', 1000, VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.int, "report every")
 options.register('gluonReduction', 0.0, VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.float, "gluon reduction")
 options.register('selectJets', True, VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.bool, "select jets with good gen match")
-options.register('phase2', False, VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.bool, "apply jet selection for phase 2. Currently sets JetEtaMax to 3.0 and picks slimmedJetsPuppi as jet collection.")
+options.register('phase2', True, VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.bool, "apply jet selection for phase 2. Currently sets JetEtaMax to 3.0 and picks slimmedJetsPuppi as jet collection.")
 options.register('puppi', True, VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.bool, "use puppi jets")
 options.register('eta', False, VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.bool, "use eta up to 5.0")
 
@@ -42,17 +43,18 @@ if options.puppi:
     usePuppi = True
 else:
     usePuppi = False
-process = cms.Process("DNNFiller")
+process = cms.Process("DNNFiller", eras.Phase2C17I13M9) # modified
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.load("Configuration.EventContent.EventContent_cff")
 process.load('Configuration.StandardSequences.Services_cff')
-process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
+process.load('Configuration.Geometry.GeometryExtended2026D95Reco_cff')
+#process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 #'auto:run2_mc'
-process.GlobalTag = GlobalTag(process.GlobalTag, '124X_mcRun3_2022_realistic_v12', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '131X_mcRun4_realistic_v5', '')
 #process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
@@ -244,7 +246,7 @@ process.looseIVFcandidateVertexArbitrator.secondaryVertices = cms.InputTag("loos
 process.looseIVFcandidateVertexArbitrator.fitterSigmacut = 20
 
 
-outFileName = options.outputFile + '_' + str(options.job) +  '.root'
+outFileName = options.outputFile  +  '.root'
 print ('Using output file ' + outFileName)
 
 process.TFileService = cms.Service("TFileService", 
@@ -270,7 +272,7 @@ else :
     process.deepntuplizer.jetPtMin = cms.double(15.0)
 
 if options.phase2 :
-    process.deepntuplizer.jetAbsEtaMax = cms.double(3.0)
+    process.deepntuplizer.jetAbsEtaMax = cms.double(4.5)   #modified 3.0-->4.5
 
 process.deepntuplizer.gluonReduction  = cms.double(options.gluonReduction)
 
