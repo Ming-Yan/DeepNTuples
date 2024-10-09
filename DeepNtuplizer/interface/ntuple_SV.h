@@ -36,7 +36,7 @@ public:
 private:
 
     // SV candidates
-    int   sv_num_;
+    int sv_num_;
     int sv_p_num_;
     float nsv_;
     std::string prefix_;
@@ -72,6 +72,8 @@ private:
     float sv_costhetasvpv_[max_sv];
     float sv_enratio_[max_sv];
     float sv_time_[max_sv];
+    float sv_time_error_[max_sv];
+    float sv_time_ntrks_[max_sv];
 
     float sv_hcal_frac_[max_sv];
     float sv_calo_frac_[max_sv];

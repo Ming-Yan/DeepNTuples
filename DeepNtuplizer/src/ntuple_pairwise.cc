@@ -210,7 +210,7 @@ void ntuple_pairwise::readEvent(const edm::Event& iEvent){
 
 //use either of these functions
 
-bool ntuple_pairwise::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  edm::View<pat::Jet> * coll){
+bool ntuple_pairwise::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  edm::View<pat::Jet> * coll, float EventTime){
 
     math::XYZVector jetDir = jet.momentum().Unit();
     GlobalVector jetRefTrackDir(jet.px(),jet.py(),jet.pz());

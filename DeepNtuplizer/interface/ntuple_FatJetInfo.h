@@ -27,7 +27,6 @@ public:
 	void readEvent(const edm::Event& iEvent) override;
 
 	void initBranches(TTree* tree) override;
-	bool fillBranches(const pat::Jet &jet, const size_t& jetidx, const  edm::View<pat::Jet> * coll) override;
 	bool fillBranches(const pat::Jet &jet, const size_t& jetidx, const  edm::View<pat::Jet> * coll, float EventTime = -1) override;
 
 	void setGenParticleToken(const edm::EDGetTokenT<reco::GenParticleCollection>& genPartToken) {

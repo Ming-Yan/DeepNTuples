@@ -37,7 +37,7 @@ void ntuple_JetInfo::initBranches(TTree* tree){
 
     // truth label
     addBranch(tree,"npv_0_z" ,&npv_0_z_ ,"npv_0_z/f" );
-    addBranch(tree, "PUrho", &PU_rho_, "PU_rho/f");s
+    addBranch(tree, "PUrho", &PU_rho_, "PU_rho/f");
     addBranch(tree,"gen_pt"    ,&gen_pt_    ,"gen_pt_/F"    );
     addBranch(tree,"Delta_gen_pt"    ,&Delta_gen_pt_,"Delta_gen_pt_/F"    );
     addBranch(tree,"isB",&isB_, "isB_/I");
@@ -85,6 +85,19 @@ void ntuple_JetInfo::initBranches(TTree* tree){
     addBranch(tree,"gen_pt_WithNu"    ,&gen_pt_WithNu_    ,"gen_pt_WithNu_/F"    );
     addBranch(tree,"Delta_gen_pt_Recluster"    ,&Delta_gen_pt_Recluster_    ,"Delta_gen_pt_Recluster_/F"    );
     addBranch(tree,"Delta_gen_pt_WithNu"    ,&Delta_gen_pt_WithNu_    ,"Delta_gen_pt_WithNu_/F"    );
+
+    addBranch(tree, "Event_time", &event_time_, "Event_time/f");
+    addBranch(tree, "event_timeNtk", &event_timeNtk, "event_timeNtk/f");
+    addBranch(tree, "event_timeWeight", &event_timeWeight, "event_timeWeight/f");
+    addBranch(tree, "PV_time", &PVtime, "PV_time/f");
+    addBranch(tree, "PVtimeError", &PVtimeError, "PVtimeError/f");
+    addBranch(tree, "Jet_time", &jet_time_, "Jet_time/f");
+    addBranch(tree, "Jet_timeWeight", &jet_timeWeight, "Jet_timeWeight/f");
+    addBranch(tree, "Jet_timeNtk", &jet_timeNtk, "Jet_timeNtk/f");
+    addBranch(tree, "Jet_vertex_time", &jet_vertex_time_, "Jet_vertex_time/f");
+    addBranch(tree, "Jet_vertex_timeNtk", &jet_vertex_timeNtk, "Jet_vertex_timeNtk/f");
+    addBranch(tree, "Jet_vertex_timeWeight", &jet_vertex_timeWeight, "Jet_vertex_timeWeight/f");
+
 
     if(1) // discriminators might need to be filled differently. FIXME
         for(auto& entry : discriminators_) {
@@ -315,20 +328,6 @@ bool ntuple_JetInfo::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
     static float ptGenTauVisibleMin = 15;
 
     // Gen leptons from resonance decay 
-    tree_->Branch("Event_time", &event_time_, "Event_time/f");
-    tree_->Branch("event_timeNtk", &event_timeNtk, "event_timeNtk/f");
-    tree_->Branch("event_timeWeight", &event_timeWeight, "event_timeWeight/f");
-    tree_->Branch("PV_time", &PVtime, "PV_time/f");
-    tree_->Branch("PVtimeError", &PVtimeError, "PVtimeError/f");
-    tree_->Branch("Jet_time", &jet_time_, "Jet_time/f");
-    tree_->Branch("Jet_timeWeight", &jet_timeWeight, "Jet_timeWeight/f");
-    tree_->Branch("Jet_timeNtk", &jet_timeNtk, "Jet_timeNtk/f");
-
-    tree_->Branch("Jet_vertex_time", &jet_vertex_time_, "Jet_vertex_time/f");
-
-    tree_->Branch("Jet_vertex_timeNtk", &jet_vertex_timeNtk, "Jet_vertex_timeNtk/f");
-
-    tree_->Branch("Jet_vertex_timeWeight", &jet_vertex_timeWeight, "Jet_vertex_timeWeight/f");
     std::vector<TLorentzVector> genLepFromResonance4V;
     std::vector<TLorentzVector> genMuonsFromResonance4V;
     std::vector<TLorentzVector> genElectronsFromResonance4V;
@@ -477,7 +476,7 @@ bool ntuple_JetInfo::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
 
     float PUrho = 0;
     std::vector<PileupSummaryInfo>::const_iterator ipu;
-    for (ipu = PUInfo->begin(); ipu != PUInfo->end(); ++ipu) {
+    for(ipu = PUInfo->begin(); ipu != PUInfo->end(); ++ipu) {
 	    if ( ipu->getBunchCrossing() != 0 ) continue; // storing detailed PU info only for BX=0
 
 	    for (unsigned int i=0; i<ipu->getPU_zpositions().size(); ++i) {

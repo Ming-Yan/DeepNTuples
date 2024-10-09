@@ -112,6 +112,7 @@ public:
 
     edm::EDGetTokenT<reco::GenParticleCollection> genParticlesToken_;
 
+    edm::EDGetTokenT<std::vector<PileupSummaryInfo>> puInfoToken_;
     edm::EDGetTokenT<pat::MuonCollection> muonsToken_;       
     edm::EDGetTokenT<pat::ElectronCollection> electronsToken_;
 
@@ -123,7 +124,7 @@ public:
 
     edm::Handle<pat::MuonCollection> muonsHandle;
     edm::Handle<pat::ElectronCollection> electronsHandle;
-
+    edm::Handle<std::vector <PileupSummaryInfo> > PUInfo;
 
     TRandom3 TRandom_;
     float gluonReduction_;
@@ -274,6 +275,18 @@ public:
     float Delta_gen_pt_Recluster_;
     float Delta_gen_pt_WithNu_;
     std::map<std::string, float> discriminators_;
+
+    float event_time_;
+    float event_timeNtk;
+    float event_timeWeight;
+    float PVtime;
+    float PVtimeError;
+    float jet_time_;
+    float jet_timeWeight;
+    float jet_timeNtk;
+    float jet_vertex_time_;
+    float jet_vertex_timeNtk;
+    float jet_vertex_timeWeight;
 };
 
 

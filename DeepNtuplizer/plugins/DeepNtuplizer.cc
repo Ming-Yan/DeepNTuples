@@ -15,7 +15,7 @@
 #include "../interface/ntuple_FatJetInfo.h"
 #include "../interface/ntuple_pairwise.h"
 #include "../interface/ntuple_LT.h"
-#include "../interface/ntuple_DeepVertex.h"
+//#include "../interface/ntuple_DeepVertex.h"
 //ROOT includes
 #include "TTree.h"
 #include <TFile.h>
@@ -247,6 +247,41 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   float event_time       = 0;
   float event_timeWeight = 0;
   float event_timeNtk = 0;
+
+  edm::View<pat::Jet>::const_iterator jetIter;
+
+  edm::Handle<std::vector<reco::VertexCompositePtrCandidate> > secvertices;
+  iEvent.getByToken(svToken_, secvertices);
+
+  edm::Handle<std::vector<PileupSummaryInfo> > pupInfo;
+  iEvent.getByToken(puToken_, pupInfo);
+
+  edm::Handle<double> rhoInfo;
+  iEvent.getByToken(rhoToken_,rhoInfo);
+
+  edm::Handle<edm::View<pat::Jet> > jets;
+  iEvent.getByToken(jetToken_, jets);
+
+  edm::Handle< edm::View<reco::BaseTagInfo> > pixHits;
+  iEvent.getByToken(pixHitsToken_, pixHits);
+
+  for(auto& m:modules_){
+    m->setPrimaryVertices(vertices.product());
+    m->setSecVertices(secvertices.product());
+    m->setPuInfo(pupInfo.product());
+    m->setRhoInfo(rhoInfo.product());
+    m->readSetup(iSetup);
+    m->readEvent(iEvent);
+  }
+
+  std::vector<size_t> indices(jets->size());
+  for(size_t i=0;i<jets->size();i++)
+    indices.at(i)=i;
+
+  if(applySelection_)
+    std::random_shuffle (indices.begin(),indices.end());
+
+
   if ( !PV4D ) { 
     for (size_t j=0; j<indices.size(); j++) {
       size_t jetidx=indices.at(j);
@@ -291,38 +326,6 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 //   std::cout << " in DeepNtuplizer " << std::endl;
 //   std::cout << " event PVz time " << (*vertices)[0].z() << " " << event_time << std::endl;
 
-
-  edm::Handle<std::vector<reco::VertexCompositePtrCandidate> > secvertices;
-  iEvent.getByToken(svToken_, secvertices);
-
-  edm::Handle<std::vector<PileupSummaryInfo> > pupInfo;
-  iEvent.getByToken(puToken_, pupInfo);
-
-  edm::Handle<double> rhoInfo;
-  iEvent.getByToken(rhoToken_,rhoInfo);
-
-  edm::Handle<edm::View<pat::Jet> > jets;
-  iEvent.getByToken(jetToken_, jets);
-
-  edm::Handle< edm::View<reco::BaseTagInfo> > pixHits;
-  iEvent.getByToken(pixHitsToken_, pixHits);
-
-  for(auto& m:modules_){
-    m->setPrimaryVertices(vertices.product());
-    m->setSecVertices(secvertices.product());
-    m->setPuInfo(pupInfo.product());
-    m->setRhoInfo(rhoInfo.product());
-    m->readSetup(iSetup);
-    m->readEvent(iEvent);
-  }
-
-  std::vector<size_t> indices(jets->size());
-  for(size_t i=0;i<jets->size();i++)
-    indices.at(i)=i;
-
-  if(applySelection_)
-    std::random_shuffle (indices.begin(),indices.end());
-
   /*for (size_t i_j = 0; i_j < jets->size(); ++i_j) {
     pat::Jet jet = jets->at(i_j);
     edm::RefToBase<pat::Jet> jetRef = jets->refAt(i_j);
@@ -340,7 +343,6 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
     }*/
 
-  edm::View<pat::Jet>::const_iterator jetIter;
   // loop over the jets
   //for (edm::View<pat::Jet>::const_iterator jetIter = jets->begin(); jetIter != jets->end(); ++jetIter) {
   for(size_t j=0;j<indices.size();j++){

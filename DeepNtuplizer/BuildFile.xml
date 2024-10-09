@@ -5,7 +5,6 @@
 <use name="TrackingTools/IPTools"/>
 <use name="DeepNTuples/JetAnalysis"/>
 <use name="RecoBTag/ONNXRuntime"/>
-<use name="SimTracker/Records"/>
 <use name="RecoBTag/TrackProbability"/>
 <use name="CondFormats/DataRecord"/>
 <use name="CondFormats/BTauObjects"/>

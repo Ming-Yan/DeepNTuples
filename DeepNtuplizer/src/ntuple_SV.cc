@@ -202,7 +202,7 @@ void ntuple_SV::initBranches(TTree* tree){
     addBranch(tree,(prefix_+"sv_puppiw").c_str()     ,&sv_puppiw_     ,(prefix_+"sv_puppiw_["+prefix_+"sv_num_]/F").c_str());
     addBranch(tree,(prefix_+"sv_charge_sum").c_str()     ,&sv_charge_sum_     ,(prefix_+"sv_charge_sum_["+prefix_+"sv_num_]/F").c_str());
     addBranch(tree,(prefix_+"sv_time").c_str() ,&sv_time_ ,(prefix_+"sv_time_["+prefix_+"sv_num_]/F").c_str());
-    addBranch(tree,(prefix_+"sv_timeerror").c_str() ,&sv_timeerror_ ,(prefix_+"sv_timeerror_["+prefix_+"sv_num_]/F").c_str());
+    addBranch(tree,(prefix_+"sv_time_error").c_str() ,&sv_time_error_ ,(prefix_+"sv_time_error_["+prefix_+"sv_num_]/F").c_str());
     addBranch(tree,(prefix_+"sv_time_ntrks").c_str() ,&sv_time_ntrks_ ,(prefix_+"sv_time_ntrks_["+prefix_+"sv_num_]/F").c_str());
 }
 
@@ -230,8 +230,8 @@ bool ntuple_SV::compareDxyDxyErr(const reco::VertexCompositePtrCandidate &sva,co
     return bsig<asig;
 }
 
-bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  edm::View<pat::Jet> * coll){
-
+//bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  edm::View<pat::Jet> * coll){
+bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  edm::View<pat::Jet> * coll, float EventTime){
 
     const float jet_uncorr_e=jet.correctedJet("Uncorrected").energy();
     const reco::Vertex & pv =    vertices()->at(0);
@@ -263,8 +263,9 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
     const reco::CandSecondaryVertexTagInfo *candSVTagInfo = jet.tagInfoCandSecondaryVertex("pfInclusiveSecondaryVertexFinder");//The vertex finder can changed!
     if ( candSVTagInfo != nullptr ) nSV = candSVTagInfo->nVertices();
     if ( nSV > 0 && candSVTagInfo->vertexTracks().size() == 0 ) nSV = -1;
-    # fill teh SV timing
+    // fill teh SV timing
 
+    for (const reco::VertexCompositePtrCandidate &sv : cpvtx) {
 //$$
 // get the vertex time, matching VertexCompositePtrCandidate and tagInfoCandSecondaryVertex ...
             float vertex_time       = 0;
@@ -328,8 +329,7 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
             sv_time_[sv_num_] = vertex_time;
             sv_time_error_[sv_num_] = vertex_timeerror;
             sv_time_ntrks_[sv_num_] = vertex_timeNtk;
-//$$
-    for (const reco::VertexCompositePtrCandidate &sv : cpvtx) {
+//$${
 
         if (reco::deltaR(sv,jet)>jet_radius) { continue; }
         if((int)max_sv>sv_num_){
