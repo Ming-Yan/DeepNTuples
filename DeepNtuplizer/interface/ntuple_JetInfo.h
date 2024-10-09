@@ -31,8 +31,9 @@ public:
 
     //use either of these functions
 
-    bool fillBranches(const pat::Jet &, const size_t& jetidx, const  edm::View<pat::Jet> * coll=0);
-
+    
+//$$    bool fillBranches(const pat::Jet &, const size_t& jetidx, const  edm::View<pat::Jet> * coll=0);
+    bool fillBranches(const pat::Jet &, const size_t& jetidx, const  edm::View<pat::Jet> * coll=0, float EventTime = -1);
     void setAxis2Token(edm::EDGetTokenT<edm::ValueMap<float> > axis2Token) {
         axis2Token_ = axis2Token;
     }
@@ -68,7 +69,9 @@ public:
     void setGenParticlesToken(edm::EDGetTokenT<reco::GenParticleCollection> genParticlesToken) {
         genParticlesToken_ = genParticlesToken;
     }
-
+    void setPUInfoToken(edm::EDGetTokenT<std::vector<PileupSummaryInfo>> puInfoToken) {
+        puInfoToken_ = puInfoToken;
+    }
     void setMuonsToken(edm::EDGetTokenT<pat::MuonCollection> muonsToken) {
         muonsToken_ = muonsToken;
     }
@@ -211,6 +214,8 @@ public:
  
     // global variables
     float npv_;
+    float npv_0_z_;
+    float PU_rho_;
     float ntrueInt_;
     float rho_;
     int event_no_;

@@ -246,7 +246,8 @@ void ntuple_pfCands::initBranches(TTree* tree){
     addBranch(tree,"Cpfcan_BtagPf_trackDecayLen",&Cpfcan_BtagPf_trackDecayLen_,"Cpfcan_BtagPf_trackDecayLen_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_BtagPf_trackJetDistVal",&Cpfcan_BtagPf_trackJetDistVal_,"Cpfcan_BtagPf_trackJetDistVal_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_BtagPf_trackJetDistSig",&Cpfcan_BtagPf_trackJetDistSig_,"Cpfcan_BtagPf_trackJetDistSig_[n_Cpfcand_]/F");
-
+    addBranch(tree,"Cpfcan_time", &Cpfcan_time_,"Cpfcan_time_[n_Cpfcand_]/f");
+    addBranch(tree,"Cpfcan_timeerror", &Cpfcan_timeerror_,"Cpfcan_timeerror_[n_Cpfcand_]/f");
     addBranch(tree,"Cpfcan_isMu",&Cpfcan_isMu_,"Cpfcan_isMu_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_isEl",&Cpfcan_isEl_,"Cpfcan_isEl_[n_Cpfcand_]/F");
     // did not give integers !!
@@ -372,14 +373,15 @@ void ntuple_pfCands::readEvent(const edm::Event& iEvent){
 
 //use either of these functions
 
-bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  edm::View<pat::Jet> * coll){
+bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  edm::View<pat::Jet> * coll, float EventTime){
 
     float etasign = 1.;
     if (jet.eta()<0) etasign =-1.;
     math::XYZVector jetDir = jet.momentum().Unit();
     GlobalVector jetRefTrackDir(jet.px(),jet.py(),jet.pz());
     const reco::Vertex & pv = vertices()->at(0);
-
+    float track_time = -1;
+    float track_timeerror = -1;
     std::vector<sorting::sortingClass<size_t> > sortedcharged, sortedneutrals;
 
     const float jet_uncorr_pt=jet.correctedJet("Uncorrected").pt();
@@ -539,7 +541,17 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Cpfcan_BtagPf_trackDecayLen_[fillntupleentry]   =trackinfo.getTrackJetDecayLen();
             Cpfcan_BtagPf_trackJetDistVal_[fillntupleentry] =catchInfsAndBound(trackinfo.getTrackJetDistVal(),0,-20,1 );
             Cpfcan_BtagPf_trackJetDistSig_[fillntupleentry] =catchInfsAndBound(trackinfo.getTrackJetDistSig(),0,-1,1e5 );
-
+            track_time = -1.;
+            track_timeerror = -1;
+            auto track = PackedCandidate_->bestTrack();
+            if ( track && EventTime > -1 ) {
+              if ( track->covt0t0() > 0. && abs(track->t0()) < 1 ) {
+	        track_time = track->t0()
+	        track_timeerror=track->covt0t0()
+	      }
+	    }
+            Cpfcan_time_[fillntupleentry] = track_time;
+            Cpfcan_timeerror_[fillntupleentry] = track_timeerror;
             // TO DO: we can do better than that by including reco::muon informations
             Cpfcan_isMu_[fillntupleentry] = 0;
             if(abs(PackedCandidate_->pdgId())==13) {

@@ -152,6 +152,7 @@ if usePuppi:
 else:
     jet_collection = 'slimmedJets'
 
+pvSource = 'offlineSlimmedPrimaryVertices4D'
 updateJetCollection(
         process,
         labelName = "DeepFlavour",

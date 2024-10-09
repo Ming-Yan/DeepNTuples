@@ -27,8 +27,8 @@ public:
     void readSetup(const edm::EventSetup& iSetup);
 
     //use either of these functions
-    bool fillBranches(const pat::Jet &, const size_t& jetidx, const  edm::View<pat::Jet> * coll=0);
-
+    //$$bool fillBranches(const pat::Jet &, const size_t& jetidx, const  edm::View<pat::Jet> * coll=0);
+    bool fillBranches(const pat::Jet &, const size_t& jetidx, const  edm::View<pat::Jet> * coll=0, float EventTime = -1);
     void setTrackBuilderToken(const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord>& track_builder_token) {
       track_builder_token_ = track_builder_token;
     }
@@ -71,6 +71,7 @@ private:
     float sv_d3dsig_[max_sv];
     float sv_costhetasvpv_[max_sv];
     float sv_enratio_[max_sv];
+    float sv_time_[max_sv];
 
     float sv_hcal_frac_[max_sv];
     float sv_calo_frac_[max_sv];

@@ -15,6 +15,7 @@
 #include "../interface/ntuple_FatJetInfo.h"
 #include "../interface/ntuple_pairwise.h"
 #include "../interface/ntuple_LT.h"
+#include "../interface/ntuple_DeepVertex.h"
 //ROOT includes
 #include "TTree.h"
 #include <TFile.h>
@@ -62,7 +63,7 @@
 #endif
 
 struct MagneticField;
-
+const reco::TrackBaseRef toTrackRef(const reco::PFCandidate * pfcand);
 
 class DeepNtuplizer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 public:
@@ -93,6 +94,15 @@ private:
 
   edm::Service<TFileService> fs;
   TTree *tree_;
+//$$
+  float event_time_ = 0;
+  float jet_time_   = 0;
+
+  const reco::Vertex  *pv;
+  float jet_vertex_time_   = 0;
+
+  bool PV4D = true; // if event time is taken from PV4D
+//$$
 
   size_t njetstotal_;
   size_t njetswithgenjet_;
@@ -160,7 +170,8 @@ DeepNtuplizer::DeepNtuplizer(const edm::ParameterSet& iConfig):
   jetinfo->setGenParticlesToken(consumes<reco::GenParticleCollection>(iConfig.getParameter<edm::InputTag>("pruned")));
   jetinfo->setMuonsToken(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons")));
   jetinfo->setElectronsToken(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons")));
-
+  jetinfo->setPUInfoToken(consumes<std::vector<PileupSummaryInfo>>(edm::InputTag("slimmedAddPileupInfo")));
+  
   addModule(jetinfo, "jetinfo");
 
   ntuple_pfCands * pfcands = new ntuple_pfCands();
@@ -228,6 +239,58 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<reco::VertexCollection> vertices;
   iEvent.getByToken(vtxToken_, vertices);
   if (vertices->empty()) return; // skip the event if no PV found
+//$$
+  pv = &(*vertices->begin());
+  float PVtime      = (pv)[0].t();
+  float PVtimeError = (pv)[0].tError();
+//$$
+  float event_time       = 0;
+  float event_timeWeight = 0;
+  float event_timeNtk = 0;
+  if ( !PV4D ) { 
+    for (size_t j=0; j<indices.size(); j++) {
+      size_t jetidx=indices.at(j);
+      jetIter = jets->begin()+jetidx;
+      const pat::Jet& jet = *jetIter;
+      for (unsigned int i = 0; i <  jet.numberOfDaughters(); i++) {
+        const pat::PackedCandidate* PackedCandidate = dynamic_cast<const pat::PackedCandidate*>(jet.daughter(i));
+      if ( !PackedCandidate ) continue;
+      if ( PackedCandidate->charge() == 0 ) continue;
+     	auto track = PackedCandidate->bestTrack();
+      if ( !track ) continue;
+        float track_dxy = track->dxy(pv->position());
+        float track_dz  = track->dz(pv->position());
+        float track_time    = track->t0();
+        float track_timeError = track->covt0t0();
+        float track_pt    = track->pt();
+        float time_weight = track_pt * track_pt;
+        if ( track_timeError > 0. && abs(track_time) < 1 
+	     && abs(track_dxy) < 0.05 && abs(track_dz) < 0.10 ) {
+          event_timeNtk    += 1;
+          event_timeWeight += time_weight;
+          event_time	   += track_time * time_weight;
+        }
+      }
+    }
+    if ( event_timeNtk > 0 ) event_time /= event_timeWeight;
+    else                     event_time = -1;
+  }
+
+  else {
+    if ( PVtimeError > 0. ) {
+      event_timeNtk = 1;
+      event_time = PVtime;
+    }
+    else {
+      event_timeNtk = 0;
+      event_time = -1;
+    }
+  }
+    event_time_ = event_time;
+//   std::cout << std::endl;
+//   std::cout << " in DeepNtuplizer " << std::endl;
+//   std::cout << " event PVz time " << (*vertices)[0].z() << " " << event_time << std::endl;
+
 
   edm::Handle<std::vector<reco::VertexCompositePtrCandidate> > secvertices;
   iEvent.getByToken(svToken_, secvertices);
@@ -293,12 +356,84 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     size_t idx = 0;
     for(auto& m:modules_){
       //std::cout << module_names_[idx] << std::endl;
-      if(! m->fillBranches(jet, jetidx, jets.product())){
+      //if(! m->fillBranches(jet, jetidx, jets.product())){
+      if(! m->fillBranches(jet, jetidx, jets.product(),event_time)){
 	writejet=false;
 	if(applySelection_) break;
       }
       idx++;
     }
+    //$$
+      float jet_time	   = 0;
+      float jet_timeWeight = 0;
+      float jet_timeNtk    = 0;
+
+      float jet_vertex_time	  = 0;
+      float jet_vertex_timeWeight = 0;
+      float jet_vertex_timeNtk    = 0;
+
+      int  nSV = -2;
+      const reco::CandSecondaryVertexTagInfo *candSVTagInfo = jet.tagInfoCandSecondaryVertex("pfInclusiveSecondaryVertexFinder");
+      if ( candSVTagInfo != nullptr ) nSV = candSVTagInfo->nVertices();
+      if ( nSV > 0 && candSVTagInfo->vertexTracks().size() == 0 ) nSV = -1;
+
+//   std::cout << "        jet " << j << " pt eta phi "
+// 	 << jet.pt() << " " << jet.eta() << " " << jet.phi() << "   nSV " << nSV << std::endl;
+
+      for (unsigned int i = 0; i <  jet.numberOfDaughters(); i++) {
+        const pat::PackedCandidate* PackedCandidate = dynamic_cast<const pat::PackedCandidate*>(jet.daughter(i));
+      if ( !PackedCandidate ) continue;
+      if ( PackedCandidate->charge() == 0 ) continue;
+        auto track = PackedCandidate->bestTrack();
+      if ( !track ) continue;
+        float track_time      = track->t0();
+        float track_timeError = track->covt0t0();
+        float track_pt    = track->pt();
+        float time_weight = track_pt * track_pt;
+        if ( track_timeError > 0. && abs(track_time) < 1 ) {
+          jet_timeNtk += 1;
+          jet_timeWeight += time_weight;
+          jet_time += track_time * time_weight;
+        }
+
+  	bool SVtrack = false;
+	if ( nSV > 0  && track_timeError > 0. && abs(track_time) < 1 ) {
+	  for (unsigned int isv=0; isv<candSVTagInfo->nVertices(); ++isv) {
+	    for (unsigned int it=0; it<candSVTagInfo->nVertexTracks(isv); ++it) {
+	    if ( candSVTagInfo->vertexTracks(isv)[it]->charge() != track->charge() ) continue;
+	      float dpt  = TMath::Abs(candSVTagInfo->vertexTracks(isv)[it]->pt()  / track->pt() - 1.);
+              float deta = TMath::Abs(candSVTagInfo->vertexTracks(isv)[it]->eta() - track->eta());
+              float dphi = TMath::Abs(candSVTagInfo->vertexTracks(isv)[it]->phi() - track->phi());
+	      if (dphi > 3.141593 ) dphi -= 2.*3.141593;
+	      if (dpt < 0.01 && deta < 0.01 && dphi < 0.01) SVtrack = true;
+	    }
+	  }
+	}
+	if ( SVtrack ) {
+          jet_vertex_timeNtk     += 1;
+          jet_vertex_timeWeight  += time_weight;
+          jet_vertex_time        += track_time * time_weight;
+	}
+      }  // end loop on tracks in jets
+
+      if ( nSV > 0 ) {
+        if ( jet_vertex_timeNtk > 0 && event_timeNtk > 0 ) {
+          jet_vertex_time = jet_vertex_time / jet_vertex_timeWeight - event_time;
+	  jet_vertex_time = TMath::Abs(jet_vertex_time);
+	}
+        else jet_vertex_time = -1;
+      }
+      else jet_vertex_time = -1;
+
+      if ( jet_timeNtk > 0 && event_timeNtk > 0 ) {
+        jet_time = jet_time / jet_timeWeight - event_time;
+	jet_time = TMath::Abs(jet_time);
+      }
+      else jet_time = -1;
+
+      jet_time_ = jet_time;
+      jet_vertex_time_ = jet_vertex_time;
+//$$
     //std::cout << "Jet done" << std::endl;
     if( (writejet&&applySelection_) || !applySelection_ ){
       tree_->Fill();

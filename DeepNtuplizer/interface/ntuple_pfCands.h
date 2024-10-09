@@ -31,8 +31,9 @@ public:
 
     //use either of these functions
 
-    bool fillBranches(const pat::Jet &, const size_t& jetidx, const  edm::View<pat::Jet> * coll=0);
-
+    
+//$$    bool fillBranches(const pat::Jet &, const size_t& jetidx, const  edm::View<pat::Jet> * coll=0);
+    bool fillBranches(const pat::Jet &, const size_t& jetidx, const  edm::View<pat::Jet> * coll=0, float EventTime = -1);
     void setTrackBuilderToken(const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord>& track_builder_token) {
 		track_builder_token_ = track_builder_token;
 	}
@@ -92,6 +93,10 @@ private:
     float  Cpfcan_dxydz_[max_pfcand_];
     float  Cpfcan_dphidxy_[max_pfcand_];
     float  Cpfcan_dlambdadz_[max_pfcand_];
+
+//$$
+    float  Cpfcan_time_[max_pfcand_];
+//$$
 
     float Cpfcan_BtagPf_trackMomentum_[max_pfcand_];
     float Cpfcan_BtagPf_trackEta_[max_pfcand_];
