@@ -291,11 +291,14 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
                     auto track = PackedCandidate->bestTrack();
                   if ( !track ) continue;
 	          if ( candSVTagInfo->vertexTracks(isv)[it]->charge() != track->charge() ) continue;
-                    float track_time      = track->t0();
-                    float track_timeError = track->covt0t0();
-                    float track_pt    = track->pt();
+                    //float track_time      = track->t0();
+                    //float track_timeError = track->covt0t0();
+                    float cand_time = PackedCandidate->time();
+                    float cand_timeError = PackedCandidate->timeError(); 
+		    
+		    float track_pt    = track->pt();
                     float time_weight = track_pt * track_pt;
-		  if (!( track_timeError > 0. && abs(track_time) < 1 )) continue;
+		  if (!( cand_timeError > 0. && abs(cand_time) < 1 )) continue;
 
 	            float dpt  = TMath::Abs(candSVTagInfo->vertexTracks(isv)[it]->pt()  / track->pt() - 1.);
                     float deta = TMath::Abs(candSVTagInfo->vertexTracks(isv)[it]->eta() - track->eta());
@@ -304,8 +307,8 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
 	            if (dpt < 0.01 && deta < 0.01 && dphi < 0.01) {
                       vertex_timeNtk    += 1;
                       vertex_timeWeight += time_weight;
-                      vertex_time       = track_time;
-//   std::cout << "  => matched track " << it << " to " << i << " time " << track_time << std::endl;
+                      vertex_time       = cand_time;
+//   std::cout << "  => matched track " << it << " to " << i << " time " << cand_time << std::endl;
 	            }
 		  } // end loop on all tracks in jet
 		} // end loop on tracks from SV in jet

@@ -58,6 +58,19 @@
 #include "TrackingTools/IPTools/interface/IPTools.h"
 #include "DataFormats/GeometryCommonDetAlgo/interface/Measurement1D.h"
 
+
+//ValueMap, Cand
+#include "DataFormats/Candidate/interface/Candidate.h"
+#include "DataFormats/Common/interface/Association.h"
+#include "DataFormats/Common/interface/ValueMap.h"
+#include "DataFormats/Common/interface/View.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
+#include "DataFormats/PatCandidates/interface/HcalDepthEnergyFractions.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
+
+
 #if defined( __GXX_EXPERIMENTAL_CXX0X__)
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #endif
@@ -94,6 +107,7 @@ private:
 
   edm::Service<TFileService> fs;
   TTree *tree_;
+
 //$$
   float event_time_ = 0;
   float jet_time_   = 0;
@@ -101,7 +115,7 @@ private:
   const reco::Vertex  *pv;
   float jet_vertex_time_   = 0;
 
-  bool PV4D = true; // if event time is taken from PV4D
+  bool PV4D = false; // if event time is taken from PV4D
 //$$
 
   size_t njetstotal_;
@@ -281,7 +295,7 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if(applySelection_)
     std::random_shuffle (indices.begin(),indices.end());
 
-
+  std::cout<<"PV4D="<<PV4D<<std::endl;
   if ( !PV4D ) { 
     for (size_t j=0; j<indices.size(); j++) {
       size_t jetidx=indices.at(j);
@@ -295,22 +309,31 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if ( !track ) continue;
         float track_dxy = track->dxy(pv->position());
         float track_dz  = track->dz(pv->position());
-        float track_time    = track->t0();
-        float track_timeError = track->covt0t0();
+        //float track_time    = track->t0();
+        //float track_timeError = track->covt0t0();
+	float cand_time = PackedCandidate->time();
+	float cand_timeError = PackedCandidate->timeError();
         float track_pt    = track->pt();
         float time_weight = track_pt * track_pt;
-        if ( track_timeError > 0. && abs(track_time) < 1 
+
+	//std::cout<<"cand_timeError="<<cand_timeError<<"    cand_time="<<cand_time <<track_dxy<<std::endl;
+        if ( cand_timeError > 0. && abs(cand_time) < 1 
 	     && abs(track_dxy) < 0.05 && abs(track_dz) < 0.10 ) {
+	  std::cout<<"Condition ( cand_timeError > 0. && abs(cand_time) < 1 && abs(track_dxy) < 0.05 && abs(track_dz) < 0.10 ) is TRUE"<<std::endl;
           event_timeNtk    += 1;
           event_timeWeight += time_weight;
-          event_time	   += track_time * time_weight;
+          event_time	   += cand_time * time_weight;
+	  //event_time += track_time;
+	  std::cout<<"event_time=";
+	  std::cout<< event_time << std::endl;
         }
       }
     }
     if ( event_timeNtk > 0 ) event_time /= event_timeWeight;
+    //if ( event_timeNtk > 0 ) event_time /= event_timeNtk;
     else                     event_time = -1;
+    //std::cout<<"Event_time_final=" << event_time <<std::endl;
   }
-
   else {
     if ( PVtimeError > 0. ) {
       event_timeNtk = 1;
@@ -322,9 +345,7 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   }
     event_time_ = event_time;
-//   std::cout << std::endl;
-//   std::cout << " in DeepNtuplizer " << std::endl;
-//   std::cout << " event PVz time " << (*vertices)[0].z() << " " << event_time << std::endl;
+    std::cout<<"Event_time_final=" << event_time <<std::endl;
 
   /*for (size_t i_j = 0; i_j < jets->size(); ++i_j) {
     pat::Jet jet = jets->at(i_j);
@@ -388,18 +409,21 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if ( PackedCandidate->charge() == 0 ) continue;
         auto track = PackedCandidate->bestTrack();
       if ( !track ) continue;
-        float track_time      = track->t0();
-        float track_timeError = track->covt0t0();
+        //float track_time      = track->t0();
+        //float track_timeError = track->covt0t0();
+	float cand_time = PackedCandidate->time();
+        float cand_timeError = PackedCandidate->timeError(); 
+
         float track_pt    = track->pt();
         float time_weight = track_pt * track_pt;
-        if ( track_timeError > 0. && abs(track_time) < 1 ) {
+        if ( cand_timeError > 0. && abs(cand_time) < 1 ) {
           jet_timeNtk += 1;
           jet_timeWeight += time_weight;
-          jet_time += track_time * time_weight;
+          jet_time += cand_time * time_weight;
         }
 
   	bool SVtrack = false;
-	if ( nSV > 0  && track_timeError > 0. && abs(track_time) < 1 ) {
+	if ( nSV > 0  && cand_timeError > 0. && abs(cand_time) < 1 ) {
 	  for (unsigned int isv=0; isv<candSVTagInfo->nVertices(); ++isv) {
 	    for (unsigned int it=0; it<candSVTagInfo->nVertexTracks(isv); ++it) {
 	    if ( candSVTagInfo->vertexTracks(isv)[it]->charge() != track->charge() ) continue;
@@ -414,7 +438,7 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	if ( SVtrack ) {
           jet_vertex_timeNtk     += 1;
           jet_vertex_timeWeight  += time_weight;
-          jet_vertex_time        += track_time * time_weight;
+          jet_vertex_time        += cand_time * time_weight;
 	}
       }  // end loop on tracks in jets
 

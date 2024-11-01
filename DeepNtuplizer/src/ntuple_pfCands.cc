@@ -380,8 +380,10 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
     math::XYZVector jetDir = jet.momentum().Unit();
     GlobalVector jetRefTrackDir(jet.px(),jet.py(),jet.pz());
     const reco::Vertex & pv = vertices()->at(0);
-    float track_time = -1;
-    float track_timeerror = -1;
+    //float track_time = -1;
+    //float track_timeerror = -1;
+    float cand_time = -1;
+    float cand_timeError = -1;
     std::vector<sorting::sortingClass<size_t> > sortedcharged, sortedneutrals;
 
     const float jet_uncorr_pt=jet.correctedJet("Uncorrected").pt();
@@ -541,17 +543,20 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Cpfcan_BtagPf_trackDecayLen_[fillntupleentry]   =trackinfo.getTrackJetDecayLen();
             Cpfcan_BtagPf_trackJetDistVal_[fillntupleentry] =catchInfsAndBound(trackinfo.getTrackJetDistVal(),0,-20,1 );
             Cpfcan_BtagPf_trackJetDistSig_[fillntupleentry] =catchInfsAndBound(trackinfo.getTrackJetDistSig(),0,-1,1e5 );
-            track_time = -1.;
-            track_timeerror = -1;
+            cand_time = -1.;
+            cand_timeError = -1;
             auto track = PackedCandidate_->bestTrack();
             if ( track && EventTime > -1 ) {
-              if ( track->covt0t0() > 0. && abs(track->t0()) < 1 ) {
-	        track_time = track->t0();
-	        track_timeerror=track->covt0t0();
+              //if ( track->covt0t0() > 0. && abs(track->t0()) < 1 ) {
+	      if ( PackedCandidate_->timeError()>0. && abs(PackedCandidate_->time()) < 1 ) {  
+	        //track_time = track->t0();
+	        //track_timeerror=track->covt0t0();
+		cand_time = PackedCandidate_->time();
+                cand_timeError = PackedCandidate_->timeError();
 	      }
 	    }
-            Cpfcan_time_[fillntupleentry] = track_time;
-            Cpfcan_timeerror_[fillntupleentry] = track_timeerror;
+            Cpfcan_time_[fillntupleentry] = cand_time;
+            Cpfcan_timeerror_[fillntupleentry] = cand_timeError;
             // TO DO: we can do better than that by including reco::muon informations
             Cpfcan_isMu_[fillntupleentry] = 0;
             if(abs(PackedCandidate_->pdgId())==13) {
