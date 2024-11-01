@@ -59,18 +59,6 @@
 #include "DataFormats/GeometryCommonDetAlgo/interface/Measurement1D.h"
 
 
-//ValueMap, Cand
-#include "DataFormats/Candidate/interface/Candidate.h"
-#include "DataFormats/Common/interface/Association.h"
-#include "DataFormats/Common/interface/ValueMap.h"
-#include "DataFormats/Common/interface/View.h"
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
-#include "DataFormats/PatCandidates/interface/HcalDepthEnergyFractions.h"
-#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
-#include "DataFormats/RecoCandidate/interface/RecoChargedCandidate.h"
-
-
 #if defined( __GXX_EXPERIMENTAL_CXX0X__)
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #endif
