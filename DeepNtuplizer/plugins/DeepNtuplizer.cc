@@ -283,7 +283,6 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if(applySelection_)
     std::random_shuffle (indices.begin(),indices.end());
 
-  std::cout<<"PV4D="<<PV4D<<std::endl;
   if ( !PV4D ) { 
     for (size_t j=0; j<indices.size(); j++) {
       size_t jetidx=indices.at(j);
@@ -304,23 +303,17 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         float track_pt    = track->pt();
         float time_weight = track_pt * track_pt;
 
-	//std::cout<<"cand_timeError="<<cand_timeError<<"    cand_time="<<cand_time <<track_dxy<<std::endl;
         if ( cand_timeError > 0. && abs(cand_time) < 1 
 	     && abs(track_dxy) < 0.05 && abs(track_dz) < 0.10 ) {
-	  std::cout<<"Condition ( cand_timeError > 0. && abs(cand_time) < 1 && abs(track_dxy) < 0.05 && abs(track_dz) < 0.10 ) is TRUE"<<std::endl;
           event_timeNtk    += 1;
           event_timeWeight += time_weight;
           event_time	   += cand_time * time_weight;
 	  //event_time += track_time;
-	  std::cout<<"event_time=";
-	  std::cout<< event_time << std::endl;
         }
       }
     }
     if ( event_timeNtk > 0 ) event_time /= event_timeWeight;
-    //if ( event_timeNtk > 0 ) event_time /= event_timeNtk;
     else                     event_time = -1;
-    //std::cout<<"Event_time_final=" << event_time <<std::endl;
   }
   else {
     if ( PVtimeError > 0. ) {
@@ -333,7 +326,6 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   }
     event_time_ = event_time;
-    std::cout<<"Event_time_final=" << event_time <<std::endl;
 
   /*for (size_t i_j = 0; i_j < jets->size(); ++i_j) {
     pat::Jet jet = jets->at(i_j);
