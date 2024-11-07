@@ -279,11 +279,9 @@ public:
     float event_time_;
     float event_timeNtk;
     float event_timeWeight;
-    float PVtime;
-    float PVtimeError;
     float jet_time_;
-    float jet_timeWeight;
-    float jet_timeNtk;
+    float jet_timeError_;
+    float jet_timeNtk_;
     float jet_vertex_time_;
     float jet_vertex_timeNtk;
     float jet_vertex_timeWeight;

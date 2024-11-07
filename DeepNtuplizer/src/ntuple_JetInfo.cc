@@ -89,11 +89,9 @@ void ntuple_JetInfo::initBranches(TTree* tree){
     addBranch(tree, "Event_time", &event_time_, "Event_time/f");
     addBranch(tree, "event_timeNtk", &event_timeNtk, "event_timeNtk/f");
     addBranch(tree, "event_timeWeight", &event_timeWeight, "event_timeWeight/f");
-    addBranch(tree, "PV_time", &PVtime, "PV_time/f");
-    addBranch(tree, "PVtimeError", &PVtimeError, "PVtimeError/f");
     addBranch(tree, "Jet_time", &jet_time_, "Jet_time/f");
-    addBranch(tree, "Jet_timeWeight", &jet_timeWeight, "Jet_timeWeight/f");
-    addBranch(tree, "Jet_timeNtk", &jet_timeNtk, "Jet_timeNtk/f");
+    addBranch(tree, "Jet_timeError", &jet_timeError_, "Jet_timeError/f");
+    addBranch(tree, "Jet_timeNtk", &jet_timeNtk_, "Jet_timeNtk/f");
     addBranch(tree, "Jet_vertex_time", &jet_vertex_time_, "Jet_vertex_time/f");
     addBranch(tree, "Jet_vertex_timeNtk", &jet_vertex_timeNtk, "Jet_vertex_timeNtk/f");
     addBranch(tree, "Jet_vertex_timeWeight", &jet_vertex_timeWeight, "Jet_vertex_timeWeight/f");
@@ -598,6 +596,33 @@ bool ntuple_JetInfo::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
     jet_corr_pt_ = jet.pt();
     jet_mass_ = jet.mass();
     jet_energy_ = jet.energy();
+
+    float jet_time        = 0;
+    float jet_timeError = 0;
+    float jet_timeNtk    = 0;
+    for (unsigned int i = 0; i <  jet.numberOfDaughters(); i++) {
+      const pat::PackedCandidate* PackedCandidate = dynamic_cast<const pat::PackedCandidate*>(jet.daughter(i));
+      if ( !PackedCandidate ) continue;
+      if ( PackedCandidate->charge() == 0 ) continue;
+        auto track = PackedCandidate->bestTrack();
+      if ( !track ) continue;
+        //float track_time      = track->t0();
+        //float track_timeError = track->covt0t0();
+        float cand_time = PackedCandidate->time();
+        float cand_timeError = PackedCandidate->timeError();
+
+        float track_pt    = track->pt();
+        float time_weight = track_pt * track_pt;
+        if ( cand_timeError > 0. && abs(cand_time) < 1 ) {
+          jet_timeNtk += 1;
+          // jet_timeWeight +=
+          jet_timeError+=cand_timeError;
+          jet_time += cand_time ;
+        }
+    }
+    jet_time_=jet_time;
+    jet_timeNtk_=jet_timeNtk;
+    jet_timeError_=jet_timeError;
 
     genDecay_ = -1.;
 

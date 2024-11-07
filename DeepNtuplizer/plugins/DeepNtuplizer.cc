@@ -326,7 +326,6 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   }
     event_time_ = event_time;
-
   /*for (size_t i_j = 0; i_j < jets->size(); ++i_j) {
     pat::Jet jet = jets->at(i_j);
     edm::RefToBase<pat::Jet> jetRef = jets->refAt(i_j);
