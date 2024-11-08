@@ -307,6 +307,7 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
 	            if (dpt < 0.01 && deta < 0.01 && dphi < 0.01) {
                       vertex_timeNtk    += 1;
                       vertex_timeWeight += time_weight;
+		      vertex_timeerror  +=cand_timeError;
                       vertex_time       = cand_time;
 //   std::cout << "  => matched track " << it << " to " << i << " time " << cand_time << std::endl;
 	            }

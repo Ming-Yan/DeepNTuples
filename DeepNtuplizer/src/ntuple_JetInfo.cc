@@ -92,9 +92,6 @@ void ntuple_JetInfo::initBranches(TTree* tree){
     addBranch(tree, "Jet_time", &jet_time_, "Jet_time/f");
     addBranch(tree, "Jet_timeError", &jet_timeError_, "Jet_timeError/f");
     addBranch(tree, "Jet_timeNtk", &jet_timeNtk_, "Jet_timeNtk/f");
-    addBranch(tree, "Jet_vertex_time", &jet_vertex_time_, "Jet_vertex_time/f");
-    addBranch(tree, "Jet_vertex_timeNtk", &jet_vertex_timeNtk, "Jet_vertex_timeNtk/f");
-    addBranch(tree, "Jet_vertex_timeWeight", &jet_vertex_timeWeight, "Jet_vertex_timeWeight/f");
 
 
     if(1) // discriminators might need to be filled differently. FIXME
@@ -606,8 +603,6 @@ bool ntuple_JetInfo::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
       if ( PackedCandidate->charge() == 0 ) continue;
         auto track = PackedCandidate->bestTrack();
       if ( !track ) continue;
-        //float track_time      = track->t0();
-        //float track_timeError = track->covt0t0();
         float cand_time = PackedCandidate->time();
         float cand_timeError = PackedCandidate->timeError();
 
@@ -615,7 +610,6 @@ bool ntuple_JetInfo::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
         float time_weight = track_pt * track_pt;
         if ( cand_timeError > 0. && abs(cand_time) < 1 ) {
           jet_timeNtk += 1;
-          // jet_timeWeight +=
           jet_timeError+=cand_timeError;
           jet_time += cand_time ;
         }

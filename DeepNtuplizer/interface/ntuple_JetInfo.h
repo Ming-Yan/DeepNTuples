@@ -282,9 +282,6 @@ public:
     float jet_time_;
     float jet_timeError_;
     float jet_timeNtk_;
-    float jet_vertex_time_;
-    float jet_vertex_timeNtk;
-    float jet_vertex_timeWeight;
 };
 
 
