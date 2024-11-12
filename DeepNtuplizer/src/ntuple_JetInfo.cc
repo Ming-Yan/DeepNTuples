@@ -88,11 +88,10 @@ void ntuple_JetInfo::initBranches(TTree* tree){
 
     addBranch(tree, "Event_time", &event_time_, "Event_time/f");
     addBranch(tree, "event_timeNtk", &event_timeNtk, "event_timeNtk/f");
-    addBranch(tree, "event_timeWeight", &event_timeWeight, "event_timeWeight/f");
     addBranch(tree, "Jet_time", &jet_time_, "Jet_time/f");
     addBranch(tree, "Jet_timeError", &jet_timeError_, "Jet_timeError/f");
     addBranch(tree, "Jet_timeNtk", &jet_timeNtk_, "Jet_timeNtk/f");
-
+    addBranch(tree, "Jet_timesig", &jet_timesig_, "Jet_timesig/f");
 
     if(1) // discriminators might need to be filled differently. FIXME
         for(auto& entry : discriminators_) {
@@ -597,6 +596,7 @@ bool ntuple_JetInfo::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
     float jet_time        = 0;
     float jet_timeError = 0;
     float jet_timeNtk    = 0;
+    float jet_timesig    = 0;
     for (unsigned int i = 0; i <  jet.numberOfDaughters(); i++) {
       const pat::PackedCandidate* PackedCandidate = dynamic_cast<const pat::PackedCandidate*>(jet.daughter(i));
       if ( !PackedCandidate ) continue;
@@ -605,18 +605,26 @@ bool ntuple_JetInfo::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
       if ( !track ) continue;
         float cand_time = PackedCandidate->time();
         float cand_timeError = PackedCandidate->timeError();
-
-        float track_pt    = track->pt();
-        float time_weight = track_pt * track_pt;
         if ( cand_timeError > 0. && abs(cand_time) < 1 ) {
           jet_timeNtk += 1;
           jet_timeError+=cand_timeError;
           jet_time += cand_time ;
         }
     }
+    if ( jet_timeNtk > 0 ) {
+        jet_time = jet_time / jet_timeNtk;
+    }
+    else jet_time = -1;
+
+    if ( jet_timeError > 0 ) {
+        jet_timesig = jet_time / jet_timeError;
+    }
+    else jet_timesig = -1000;
+
     jet_time_=jet_time;
     jet_timeNtk_=jet_timeNtk;
     jet_timeError_=jet_timeError;
+    jet_timesig_=jet_timesig;
 
     genDecay_ = -1.;
 

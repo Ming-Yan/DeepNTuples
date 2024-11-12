@@ -97,6 +97,7 @@ private:
 //$$
     float  Cpfcan_time_[max_pfcand_];
     float  Cpfcan_timeerror_[max_pfcand_];
+    float  Cpfcan_timesig_[max_pfcand_];
 //$$
 
     float Cpfcan_BtagPf_trackMomentum_[max_pfcand_];

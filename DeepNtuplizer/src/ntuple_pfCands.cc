@@ -247,6 +247,7 @@ void ntuple_pfCands::initBranches(TTree* tree){
     addBranch(tree,"Cpfcan_BtagPf_trackJetDistVal",&Cpfcan_BtagPf_trackJetDistVal_,"Cpfcan_BtagPf_trackJetDistVal_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_BtagPf_trackJetDistSig",&Cpfcan_BtagPf_trackJetDistSig_,"Cpfcan_BtagPf_trackJetDistSig_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_time", &Cpfcan_time_,"Cpfcan_time_[n_Cpfcand_]/f");
+    addBranch(tree,"Cpfcan_timesig", &Cpfcan_timesig_,"Cpfcan_timesig_[n_Cpfcand_]/f");
     addBranch(tree,"Cpfcan_timeerror", &Cpfcan_timeerror_,"Cpfcan_timeerror_[n_Cpfcand_]/f");
     addBranch(tree,"Cpfcan_isMu",&Cpfcan_isMu_,"Cpfcan_isMu_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_isEl",&Cpfcan_isEl_,"Cpfcan_isEl_[n_Cpfcand_]/F");
@@ -557,6 +558,12 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
 	    }
             Cpfcan_time_[fillntupleentry] = cand_time;
             Cpfcan_timeerror_[fillntupleentry] = cand_timeError;
+	    if(cand_timeError > 0){
+	      Cpfcan_timesig_[fillntupleentry] = cand_time/cand_timeError;
+	    }
+	    else{
+	      Cpfcan_timesig_[fillntupleentry] = -1000;
+	    }
             // TO DO: we can do better than that by including reco::muon informations
             Cpfcan_isMu_[fillntupleentry] = 0;
             if(abs(PackedCandidate_->pdgId())==13) {

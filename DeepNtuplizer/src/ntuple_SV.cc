@@ -202,6 +202,7 @@ void ntuple_SV::initBranches(TTree* tree){
     addBranch(tree,(prefix_+"sv_puppiw").c_str()     ,&sv_puppiw_     ,(prefix_+"sv_puppiw_["+prefix_+"sv_num_]/F").c_str());
     addBranch(tree,(prefix_+"sv_charge_sum").c_str()     ,&sv_charge_sum_     ,(prefix_+"sv_charge_sum_["+prefix_+"sv_num_]/F").c_str());
     addBranch(tree,(prefix_+"sv_time").c_str() ,&sv_time_ ,(prefix_+"sv_time_["+prefix_+"sv_num_]/F").c_str());
+    addBranch(tree,(prefix_+"sv_time_sig").c_str() ,&sv_time_sig_ ,(prefix_+"sv_time_sig_["+prefix_+"sv_num_]/F").c_str());
     addBranch(tree,(prefix_+"sv_time_error").c_str() ,&sv_time_error_ ,(prefix_+"sv_time_error_["+prefix_+"sv_num_]/F").c_str());
     addBranch(tree,(prefix_+"sv_time_ntrks").c_str() ,&sv_time_ntrks_ ,(prefix_+"sv_time_ntrks_["+prefix_+"sv_num_]/F").c_str());
 }
@@ -269,9 +270,9 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
 //$$
 // get the vertex time, matching VertexCompositePtrCandidate and tagInfoCandSecondaryVertex ...
             float vertex_time       = 0;
-            float vertex_timeerror       = 0;
-            float vertex_timeWeight = 0;
+            float vertex_timeerror  = 0;
             float vertex_timeNtk    = 0;
+            float vertex_timesig    = 0;
 
             if ( nSV > 0 && sv.pt() > 0. ) {
 	      for (unsigned int isv=0; isv<candSVTagInfo->nVertices(); ++isv) {
@@ -296,8 +297,6 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
                     float cand_time = PackedCandidate->time();
                     float cand_timeError = PackedCandidate->timeError(); 
 		    
-		    float track_pt    = track->pt();
-                    float time_weight = track_pt * track_pt;
 		  if (!( cand_timeError > 0. && abs(cand_time) < 1 )) continue;
 
 	            float dpt  = TMath::Abs(candSVTagInfo->vertexTracks(isv)[it]->pt()  / track->pt() - 1.);
@@ -306,7 +305,6 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
 	            if (dphi > 3.141593 ) dphi -= 2.*3.141593;
 	            if (dpt < 0.01 && deta < 0.01 && dphi < 0.01) {
                       vertex_timeNtk    += 1;
-                      vertex_timeWeight += time_weight;
 		      vertex_timeerror  +=cand_timeError;
                       vertex_time       = cand_time;
 //   std::cout << "  => matched track " << it << " to " << i << " time " << cand_time << std::endl;
@@ -314,17 +312,24 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
 		  } // end loop on all tracks in jet
 		} // end loop on tracks from SV in jet
 	      } // end loop on SVs in jet
-              if ( vertex_timeNtk > 0 && EventTime > -1 ) {
-                vertex_time = vertex_time ;
+              if ( vertex_timeNtk > 0 ) {
+                vertex_time = vertex_time/vertex_timeNtk ;
 	      }
-              else
-              {vertex_time = -1;
+              else{
+    	      vertex_time = -1;
               vertex_timeerror= -1;
+              }
+	      if ( vertex_timeerror > 0 ) {
+                vertex_timesig = vertex_time/vertex_timeerror ;
+              }
+              else{
+              vertex_timesig= -1000;
               }
 	    }
 	    else {
-        vertex_time = -1.;
-        vertex_timeerror = -1.;
+        vertex_time = -1;
+        vertex_timeerror = -1;
+	vertex_timesig = -1000;
         }
 
 //   std::cout << " NTuple sv " << sv_num_ << " pt eta phi " << sv.pt() << " " << sv.eta() << " " << sv.phi()
@@ -333,6 +338,7 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
             sv_time_[sv_num_] = vertex_time;
             sv_time_error_[sv_num_] = vertex_timeerror;
             sv_time_ntrks_[sv_num_] = vertex_timeNtk;
+	    sv_time_sig_[sv_num_] = vertex_timesig;
 //$${
 
         if (reco::deltaR(sv,jet)>jet_radius) { continue; }

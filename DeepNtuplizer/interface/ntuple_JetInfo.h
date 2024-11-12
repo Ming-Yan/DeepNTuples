@@ -278,10 +278,10 @@ public:
 
     float event_time_;
     float event_timeNtk;
-    float event_timeWeight;
     float jet_time_;
     float jet_timeError_;
     float jet_timeNtk_;
+    float jet_timesig_;
 };
 
 
