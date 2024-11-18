@@ -57,6 +57,8 @@
 #include "DataFormats/Math/interface/deltaR.h"
 #include "TrackingTools/IPTools/interface/IPTools.h"
 #include "DataFormats/GeometryCommonDetAlgo/interface/Measurement1D.h"
+#include "SimDataFormats/Vertex/interface/SimVertex.h"
+#include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
 
 
 #if defined( __GXX_EXPERIMENTAL_CXX0X__)
@@ -86,6 +88,8 @@ private:
 
   // ----------member data ---------------------------
   edm::EDGetTokenT<reco::VertexCollection> vtxToken_;
+  edm::EDGetTokenT<edm::SimVertexContainer> simVertToken_;
+
   edm::EDGetTokenT<reco::VertexCompositePtrCandidateCollection> svToken_;
   edm::EDGetTokenT<edm::View<pat::Jet> >      jetToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > puToken_;
@@ -101,6 +105,19 @@ private:
   float jet_time_   = 0;
 
   const reco::Vertex  *pv;
+  static constexpr size_t maxvtx=200;
+  int nvtx_;
+  int vtx_num_;
+  int simvtx_num_;
+  int nsimvtx_;
+  float vtx_pt_[maxvtx];
+  float vtx_eta_[maxvtx];
+  float vtx_phi_[maxvtx];
+  float vtx_e_[maxvtx];
+  float simvtx_x_[maxvtx];
+  float simvtx_y_[maxvtx];
+  float simvtx_z_[maxvtx];
+  float simvtx_rho_[maxvtx];
 
   bool PV4D = false; // if event time is taken from PV4D
 //$$
@@ -123,6 +140,7 @@ private:
 
 DeepNtuplizer::DeepNtuplizer(const edm::ParameterSet& iConfig):
   vtxToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
+  simVertToken_(consumes<edm::SimVertexContainer>(edm::InputTag("simVerticesTag"))),
   svToken_(consumes<reco::VertexCompositePtrCandidateCollection>(iConfig.getParameter<edm::InputTag>("secVertices"))),
   jetToken_(consumes<edm::View<pat::Jet> >(iConfig.getParameter<edm::InputTag>("jets"))),
   puToken_(consumes<std::vector<PileupSummaryInfo >>(iConfig.getParameter<edm::InputTag>("pupInfo"))),
@@ -239,8 +257,42 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   edm::Handle<reco::VertexCollection> vertices;
   iEvent.getByToken(vtxToken_, vertices);
+  edm::Handle<edm::SimVertexContainer> simVertices;
+  iEvent.getByToken(simVertToken_, simVertices);
   if (vertices->empty()) return; // skip the event if no PV found
+  // if (simVertices.isValid())
+  // {
+    nsimvtx_ = simVertices->size();
+    simvtx_num_ = 0;
+    for (edm::SimVertexContainer::const_iterator simvtx = simVertices->begin(); simvtx != simVertices->end(); ++simvtx)
+    {
+      simvtx_x_[simvtx_num_] = simvtx->position().x();
+      simvtx_y_[simvtx_num_] = simvtx->position().y();
+      simvtx_z_[simvtx_num_] = simvtx->position().z();
+      simvtx_rho_[simvtx_num_] = simvtx->position().rho();
+      simvtx_num_++;
+    }
+    std::cout<<"nsimvtx_ = "<<nsimvtx_<<std::endl;
+  // }
+  // else
+  // {
+  //   nsimvtx_ = 0;
+  //   simvtx_num_ = 0;
+  // }
+  nvtx_ = vertices->size();
+  std::cout<<"nvtx_ = "<<nvtx_<<std::endl;
+  vtx_num_ = 0;
+  for (std::vector<reco::Vertex>::const_iterator it = vertices->begin(); it != vertices->end(); ++it)
+  {
+    vtx_pt_[vtx_num_] = it->p4().pt();
+    vtx_eta_[vtx_num_] = it->p4().eta();
+    vtx_phi_[vtx_num_] = it->p4().phi();
+    vtx_e_[vtx_num_] = it->p4().e();
+    vtx_num_++;
+  }
+  //  throw cms::Exception("FatalError") << "No vertices found\n";
 //$$
+  
   pv = &(*vertices->begin());
   float PVtime      = (pv)[0].t();
   float PVtimeError = (pv)[0].tError();
@@ -273,7 +325,7 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     m->readSetup(iSetup);
     m->readEvent(iEvent);
   }
-
+  
   std::vector<size_t> indices(jets->size());
   for(size_t i=0;i<jets->size();i++)
     indices.at(i)=i;
@@ -402,7 +454,10 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
     }
   } // end of looping over the jets
+  // std::cout <<   << std::endl;
+   tree_->Fill();
 }
+
 
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -414,7 +469,16 @@ DeepNtuplizer::beginJob()
 			  "TFile Service is not registered in cfg file" );
   }
   tree_=(fs->make<TTree>("tree" ,"tree" ));
-
+  tree_->Branch("nvtx", &nvtx_, "nvtx/I");
+  tree_->Branch("nsimvtx", &nsimvtx_, "nsimvtx/I");
+  tree_->Branch("vtx_pt", &vtx_pt_, "vtx_pt[nvtx]/F");
+  tree_->Branch("vtx_eta", &vtx_eta_, "vtx_eta[nvtx]/F");
+  tree_->Branch("vtx_phi", &vtx_phi_, "vtx_phi[nvtx]/F");
+  tree_->Branch("vtx_e", &vtx_e_, "vtx_e[nvtx]/F");
+  tree_->Branch("simvtx_x", &simvtx_x_, "simvtx_x[nsimvtx]/F"); 
+  tree_->Branch("simvtx_y", &simvtx_y_, "simvtx_y[nsimvtx]/F"); 
+  tree_->Branch("simvtx_z", &simvtx_z_, "simvtx_z[nsimvtx]/F"); 
+  tree_->Branch("simvtx_rho", &simvtx_rho_, "simvtx_rho[nsimvtx]/F");
   for(auto& m:modules_)
     m->initBranches(tree_);
 

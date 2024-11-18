@@ -146,13 +146,15 @@ jetCorrectionsAK4 = ('AK4PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'], 'Non
 from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
 if options.phase2:
     usePuppi = True
-
+    pvSource = 'offlineSlimmedPrimaryVertices4D'
+else:
+    pvSource="offlineSlimmedPrimaryVertices"
 if usePuppi:
     jet_collection = 'slimmedJetsPuppi'
 else:
     jet_collection = 'slimmedJets'
 
-pvSource = 'offlineSlimmedPrimaryVertices4D'
+
 updateJetCollection(
         process,
         labelName = "DeepFlavour",
@@ -160,7 +162,7 @@ updateJetCollection(
         jetSource = cms.InputTag(jet_collection),  # 'ak4Jets'
         jetCorrections = jetCorrectionsAK4,
         pfCandidates = cms.InputTag('packedPFCandidates'),
-        pvSource = cms.InputTag("offlineSlimmedPrimaryVertices"),
+        pvSource = cms.InputTag(pvSource),
         svSource = cms.InputTag('slimmedSecondaryVertices'),
         muSource = cms.InputTag('slimmedMuons'),
         elSource = cms.InputTag('slimmedElectrons'),
