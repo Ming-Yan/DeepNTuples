@@ -78,6 +78,16 @@ private:
     float Cpfcan_vertex_phirel_[max_pfcand_];
     float Cpfcan_vertex_etarel_[max_pfcand_];
     float Cpfcan_vertexRef_mass_[max_pfcand_];
+    float  Cpfcan_vertex_time_[max_pfcand_];
+    float  Cpfcan_vertex_x_[max_pfcand_];
+    float  Cpfcan_vertex_y_[max_pfcand_];
+    float  Cpfcan_vertex_z_[max_pfcand_];
+    float  Cpfcan_vertex_t_[max_pfcand_];
+    float  Cpfcan_pv_time_[max_pfcand_];
+    float  Cpfcan_pv_z_[max_pfcand_];
+    float  Cpfcan_z_[max_pfcand_];
+    float  Npfcan_vertex_time_[max_pfcand_];
+    float  Npfcan_pv_time_[max_pfcand_];
     // covariance
     float  Cpfcan_dz_[max_pfcand_];
     float  Cpfcan_dxy_[max_pfcand_];
@@ -98,6 +108,9 @@ private:
     float  Cpfcan_time_[max_pfcand_];
     float  Cpfcan_timeerror_[max_pfcand_];
     float  Cpfcan_timesig_[max_pfcand_];
+  float  Npfcan_time_[max_pfcand_];
+  float  Npfcan_timeerror_[max_pfcand_];
+  float  Npfcan_timesig_[max_pfcand_];
 //$$
 
     float Cpfcan_BtagPf_trackMomentum_[max_pfcand_];

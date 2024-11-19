@@ -230,6 +230,14 @@ void ntuple_pfCands::initBranches(TTree* tree){
     addBranch(tree,"Cpfcan_vertex_rho",&Cpfcan_vertex_rho_,"Cpfcan_vertex_rho_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_vertex_phirel",&Cpfcan_vertex_phirel_,"Cpfcan_vertex_phirel_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_vertex_etarel",&Cpfcan_vertex_etarel_,"Cpfcan_vertex_etarel_[n_Cpfcand_]/F");
+    addBranch(tree,"Cpfcan_vertex_time",&Cpfcan_vertex_time_, "Cpfcan_vertex_time_[n_Cpfcand_]/F");
+    // addBranch(tree,"Cpfcan_vertex_x",&Cpfcan_vertex_x_, "Cpfcan_vertex_x_[n_Cpfcand_]/F");
+    // addBranch(tree,"Cpfcan_vertex_y",&Cpfcan_vertex_y_, "Cpfcan_vertex_y_[n_Cpfcand_]/F");
+    addBranch(tree,"Cpfcan_vertex_z",&Cpfcan_vertex_z_, "Cpfcan_vertex_z_[n_Cpfcand_]/F");
+    // addBranch(tree,"Cpfcan_vertex_t",&Cpfcan_vertex_t_, "Cpfcan_vertex_t_[n_Cpfcand_]/F");
+    addBranch(tree,"Cpfcan_pv_time",&Cpfcan_pv_time_, "Cpfcan_pv_time_[n_Cpfcand_]/F");
+    addBranch(tree,"Cpfcan_pv_z",&Cpfcan_pv_z_, "Cpfcan_pv_z_[n_Cpfcand_]/F");
+    addBranch(tree,"Cpfcan_z",&Cpfcan_z_, "Cpfcan_z_[n_Cpfcand_]/F");
 
     addBranch(tree,"Cpfcan_BtagPf_trackMomentum",&Cpfcan_BtagPf_trackMomentum_,"Cpfcan_BtagPf_trackMomentum_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_BtagPf_trackEta",&Cpfcan_BtagPf_trackEta_,"Cpfcan_BtagPf_trackEta_[n_Cpfcand_]/F");
@@ -333,7 +341,12 @@ void ntuple_pfCands::initBranches(TTree* tree){
     //Neutral Pf candidates
     addBranch(tree,"n_Npfcand", &n_Npfcand_,"n_Npfcand_/I");
     addBranch(tree,"nNpfcand", &nNpfcand_,"nNpfcand/F");
+    addBranch(tree,"Npfcan_vertex_time",&Npfcan_vertex_time_, "Npfcan_vertex_time_[n_Npfcand_]/F");
+    addBranch(tree,"Npfcan_pv_time",&Npfcan_pv_time_, "Npfcan_pv_time_[n_Npfcand_]/F");
 
+    addBranch(tree,"Npfcan_time", &Npfcan_time_,"Npfcan_time_[n_Npfcand_]/F");
+    addBranch(tree,"Npfcan_timesig", &Npfcan_timesig_,"Npfcan_timesig_[n_Npfcand_]/F");
+    addBranch(tree,"Npfcan_timeerror", &Npfcan_timeerror_,"Npfcan_timeerror_[n_Npfcand_]/F");
     addBranch(tree,"Npfcan_pt", &Npfcan_pt_,"Npfcan_pt_[n_Npfcand_]/F");
     addBranch(tree,"Npfcan_px", &Npfcan_px_,"Npfcan_px_[n_Npfcand_]/F");
     addBranch(tree,"Npfcan_py", &Npfcan_py_,"Npfcan_py_[n_Npfcand_]/F");
@@ -497,12 +510,17 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Cpfcan_vertexNormalizedChi2_[fillntupleentry]=PackedCandidate_->vertexNormalizedChi2();
             Cpfcan_vertex_rho_[fillntupleentry]=catchInfsAndBound(PackedCandidate_->vertex().rho(),0,-1,50);
             Cpfcan_vertex_phirel_[fillntupleentry]=reco::deltaPhi(PackedCandidate_->vertex().phi(),jet.phi());
+            // Cpfcan_vertex_time_[fillntupleentry]=PackedCandidate_->vertex().t()
+            Cpfcan_vertex_time_[fillntupleentry]=PackedCandidate_->time()-PackedCandidate_->vertexRef()->t();
+            Cpfcan_pv_time_[fillntupleentry]=PackedCandidate_->time()-pv.t();
+            Cpfcan_vertex_z_[fillntupleentry]=PackedCandidate_->vertexRef()->z();
+            Cpfcan_pv_z_[fillntupleentry]=pv.z();
             Cpfcan_vertex_etarel_[fillntupleentry]=etasign*(PackedCandidate_->vertex().eta()-jet.eta());
             Cpfcan_vertexRef_mass_[fillntupleentry]=PackedCandidate_->vertexRef()->p4().M();
 
 
             Cpfcan_puppiw_[fillntupleentry] = PackedCandidate_->puppiWeight();
-
+            
 
             /*
             reco::Track::CovarianceMatrix myCov = PseudoTrack.covariance ();
@@ -518,7 +536,7 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Cpfcan_dphidxy_[fillntupleentry] =   catchInfs(myCov[2][3],-0.03); //zero if pvAssociationQuality ==7 ?
             Cpfcan_dlambdadz_[fillntupleentry]=  catchInfs(myCov[1][4],-0.03); //zero if pvAssociationQuality ==7 ?
              */
-
+            
             trackinfo.buildTrackInfo(PackedCandidate_,jetDir,jetRefTrackDir,pv);
 
 	    const reco::TransientTrack ttrack = trackinfo.getTTrack();
@@ -579,6 +597,7 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Cpfcan_charge_[fillntupleentry] = cand_charge_;
             Cpfcan_lostInnerHits_[fillntupleentry] = catchInfs(PackedCandidate_->lostInnerHits(),2);
 	    Cpfcan_numberOfPixelHits_[fillntupleentry] = catchInfs(PackedCandidate_->numberOfPixelHits(),-1);
+      Cpfcan_z_[fillntupleentry] = PackedCandidate_->p4().z();
 	    //std::cout << PackedCandidate_->lostInnerHits()<< " inner hits " <<std::endl;
 	    //std::cout << PackedCandidate_->numberOfPixelHits()<< " Pixel hits + masked " <<std::endl;
 	    //std::cout <<PackedCandidate_->pixelLayersWithMeasurement()<< " Pixel hits " <<std::endl;
@@ -858,6 +877,25 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Npfcan_pz_[fillntupleentry] = PackedCandidate_->pz();
             Npfcan_eta_[fillntupleentry] = PackedCandidate_->eta();
             Npfcan_phi_[fillntupleentry] = PackedCandidate_->phi();
+	    
+	    if ( PackedCandidate_->timeError()>0. && abs(PackedCandidate_->time()) < 1 ) {
+	      Npfcan_time_[fillntupleentry] = PackedCandidate_->time();
+	      Npfcan_timeerror_[fillntupleentry] = PackedCandidate_->timeError();
+		
+            }
+	    else
+	      {
+		Npfcan_time_[fillntupleentry] = -1;
+		Npfcan_timeerror_[fillntupleentry] = -1;
+	      }
+
+            if(Npfcan_timeerror_[fillntupleentry] > 0){
+              Npfcan_timesig_[fillntupleentry] = Npfcan_time_[fillntupleentry]/Npfcan_timeerror_[fillntupleentry];
+            }
+            else{
+              Npfcan_timesig_[fillntupleentry] = -1000;
+            }
+	    
             Npfcan_ptrel_[fillntupleentry] = catchInfsAndBound(PackedCandidate_->pt()/jet_uncorr_pt,0,-1,0,-1);
             Npfcan_erel_[fillntupleentry] = catchInfsAndBound(PackedCandidate_->energy()/jet_uncorr_e,0,-1,0,-1);
             Npfcan_e_[fillntupleentry] = PackedCandidate_->energy();
@@ -870,7 +908,8 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Npfcan_CaloFrac_[fillntupleentry] = PackedCandidate_->caloFraction();
             Npfcan_HadFrac_[fillntupleentry] = PackedCandidate_->hcalFraction();
             Npfcan_pdgID_[fillntupleentry] = pdgid_;
-
+            Npfcan_vertex_time_[fillntupleentry]=PackedCandidate_->time()-PackedCandidate_->vertexRef()->t();
+            Npfcan_pv_time_[fillntupleentry]=PackedCandidate_->time()-pv.t();
             Npfcan_drminsv_[fillntupleentry] = catchInfsAndBound(drminpfcandsv_,0,-0.4,0,-0.4);
 
         }
