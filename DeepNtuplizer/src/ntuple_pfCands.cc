@@ -234,6 +234,7 @@ void ntuple_pfCands::initBranches(TTree* tree){
     // addBranch(tree,"Cpfcan_vertex_x",&Cpfcan_vertex_x_, "Cpfcan_vertex_x_[n_Cpfcand_]/F");
     // addBranch(tree,"Cpfcan_vertex_y",&Cpfcan_vertex_y_, "Cpfcan_vertex_y_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_vertex_z",&Cpfcan_vertex_z_, "Cpfcan_vertex_z_[n_Cpfcand_]/F");
+    // addBranch(tree,"Cpfcan_vertex_z",&Cpfcan_vertex_z_, "Cpfcan_vertex_z_[n_Cpfcand_]/F");
     // addBranch(tree,"Cpfcan_vertex_t",&Cpfcan_vertex_t_, "Cpfcan_vertex_t_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_pv_time",&Cpfcan_pv_time_, "Cpfcan_pv_time_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_pv_z",&Cpfcan_pv_z_, "Cpfcan_pv_z_[n_Cpfcand_]/F");
@@ -510,11 +511,23 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Cpfcan_vertexNormalizedChi2_[fillntupleentry]=PackedCandidate_->vertexNormalizedChi2();
             Cpfcan_vertex_rho_[fillntupleentry]=catchInfsAndBound(PackedCandidate_->vertex().rho(),0,-1,50);
             Cpfcan_vertex_phirel_[fillntupleentry]=reco::deltaPhi(PackedCandidate_->vertex().phi(),jet.phi());
-            // Cpfcan_vertex_time_[fillntupleentry]=PackedCandidate_->vertex().t()
-            Cpfcan_vertex_time_[fillntupleentry]=PackedCandidate_->time()-PackedCandidate_->vertexRef()->t();
-            Cpfcan_pv_time_[fillntupleentry]=PackedCandidate_->time()-pv.t();
+            Cpfcan_vertex_time_[fillntupleentry]=PackedCandidate_->vertexRef()->t();
             Cpfcan_vertex_z_[fillntupleentry]=PackedCandidate_->vertexRef()->z();
+            Cpfcan_pv_time_[fillntupleentry]=PackedCandidate_->dtime();
+
+            // Cpfcan_vertex_z_[fillntupleentry]=PackedCandidate_->vertexRef()->z();
+            std::cout<<"PackedCandidate_->vertexRef()->z() " << PackedCandidate_->vertexRef()->z()<<std::endl;
+            std::cout<<"PackedCandidate_->vertex().z() " << PackedCandidate_->vertex().z()<<std::endl;
+            // dtimeAssociatedPV() 
+            std::cout<<"PackedCandidate_->time()-PackedCandidate_->vertexRef()->t() " << PackedCandidate_->time()-PackedCandidate_->vertexRef()->t()<<std::endl;
+            std::cout<<"PackedCandidate_->dtime() " << PackedCandidate_->dtime()<<std::endl;
+            std::cout<<"PackedCandidate_->dtimeAssociatedPV() " << PackedCandidate_->dtimeAssociatedPV()<<std::endl;
             Cpfcan_pv_z_[fillntupleentry]=pv.z();
+            // auto track = PackedCandidate_->bestTrack();
+           
+
+            Cpfcan_z_[fillntupleentry] = PackedCandidate_->p4().z();
+            // std::cout<<PackedCandidate_->p4().z()<<" track"<<track->dz()<<std::endl;
             Cpfcan_vertex_etarel_[fillntupleentry]=etasign*(PackedCandidate_->vertex().eta()-jet.eta());
             Cpfcan_vertexRef_mass_[fillntupleentry]=PackedCandidate_->vertexRef()->p4().M();
 
@@ -597,7 +610,8 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Cpfcan_charge_[fillntupleentry] = cand_charge_;
             Cpfcan_lostInnerHits_[fillntupleentry] = catchInfs(PackedCandidate_->lostInnerHits(),2);
 	    Cpfcan_numberOfPixelHits_[fillntupleentry] = catchInfs(PackedCandidate_->numberOfPixelHits(),-1);
-      Cpfcan_z_[fillntupleentry] = PackedCandidate_->p4().z();
+      
+      
 	    //std::cout << PackedCandidate_->lostInnerHits()<< " inner hits " <<std::endl;
 	    //std::cout << PackedCandidate_->numberOfPixelHits()<< " Pixel hits + masked " <<std::endl;
 	    //std::cout <<PackedCandidate_->pixelLayersWithMeasurement()<< " Pixel hits " <<std::endl;
