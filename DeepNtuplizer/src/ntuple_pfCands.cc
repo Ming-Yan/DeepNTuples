@@ -5,7 +5,6 @@
  *      Author: jkiesele
  */
 
-
 #include "../interface/ntuple_pfCands.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/Candidate/interface/VertexCompositePtrCandidate.h"
@@ -239,7 +238,9 @@ void ntuple_pfCands::initBranches(TTree* tree){
     addBranch(tree,"Cpfcan_pv_time",&Cpfcan_pv_time_, "Cpfcan_pv_time_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_pv_z",&Cpfcan_pv_z_, "Cpfcan_pv_z_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_z",&Cpfcan_z_, "Cpfcan_z_[n_Cpfcand_]/F");
-
+    addBranch(tree,"Cpfcan_trk_z",&Cpfcan_trk_z_, "Cpfcan_trk_z_[n_Cpfcand_]/F");
+    addBranch(tree,"Cpfcan_trk_time",&Cpfcan_trk_time_, "Cpfcan_trk_time_[n_Cpfcand_]/F");
+    addBranch(tree,"Cpfcan_trk_timeerror",&Cpfcan_trk_timeerror_, "Cpfcan_trk_timeerror_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_BtagPf_trackMomentum",&Cpfcan_BtagPf_trackMomentum_,"Cpfcan_BtagPf_trackMomentum_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_BtagPf_trackEta",&Cpfcan_BtagPf_trackEta_,"Cpfcan_BtagPf_trackEta_[n_Cpfcand_]/F");
     addBranch(tree,"Cpfcan_BtagPf_trackEtaRel",&Cpfcan_BtagPf_trackEtaRel_,"Cpfcan_BtagPf_trackEtaRel_[n_Cpfcand_]/F");
@@ -516,21 +517,19 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Cpfcan_pv_time_[fillntupleentry]=PackedCandidate_->dtime();
 
             // Cpfcan_vertex_z_[fillntupleentry]=PackedCandidate_->vertexRef()->z();
-            std::cout<<"PackedCandidate_->vertexRef()->z() " << PackedCandidate_->vertexRef()->z()<<std::endl;
-            std::cout<<"PackedCandidate_->vertex().z() " << PackedCandidate_->vertex().z()<<std::endl;
-            // dtimeAssociatedPV() 
-            std::cout<<"PackedCandidate_->time()-PackedCandidate_->vertexRef()->t() " << PackedCandidate_->time()-PackedCandidate_->vertexRef()->t()<<std::endl;
-            std::cout<<"PackedCandidate_->dtime() " << PackedCandidate_->dtime()<<std::endl;
-            std::cout<<"PackedCandidate_->dtimeAssociatedPV() " << PackedCandidate_->dtimeAssociatedPV()<<std::endl;
-            Cpfcan_pv_z_[fillntupleentry]=pv.z();
-            // auto track = PackedCandidate_->bestTrack();
-           
-
+            Cpfcan_pv_z_[fillntupleentry]=pv.z();            
             Cpfcan_z_[fillntupleentry] = PackedCandidate_->p4().z();
             // std::cout<<PackedCandidate_->p4().z()<<" track"<<track->dz()<<std::endl;
             Cpfcan_vertex_etarel_[fillntupleentry]=etasign*(PackedCandidate_->vertex().eta()-jet.eta());
             Cpfcan_vertexRef_mass_[fillntupleentry]=PackedCandidate_->vertexRef()->p4().M();
 
+            // Cpfcan_trk_z_[fillntupleentry] = PackedCandidate_->bestTrack() ? PackedCandidate_->bestTrack()->dz(PackedCandidate_->vertexRef()->position()) : -999;
+            // TLorentzVector p4_tplus(PackedCandidate_->bestTrack()->px(), PackedCandidate_->bestTrack()->py(), PackedCandidate_->bestTrack()->pz(), sqrt((tplus->p() * tplus->p()) + piMass2));
+            Cpfcan_trk_z_[fillntupleentry] = PackedCandidate_->bestTrack() ? PackedCandidate_->bestTrack()->vz() : -999;
+
+            Cpfcan_trk_time_[fillntupleentry] = (PackedCandidate_->bestTrack()) ? PackedCandidate_->bestTrack()->t0() : -1;
+            
+            Cpfcan_trk_timeerror_[fillntupleentry] = (PackedCandidate_->bestTrack()!=nullptr) ? PackedCandidate_->bestTrack()->covt0t0() : -1;
 
             Cpfcan_puppiw_[fillntupleentry] = PackedCandidate_->puppiWeight();
             
@@ -578,7 +577,7 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             cand_time = -1.;
             cand_timeError = -1;
             auto track = PackedCandidate_->bestTrack();
-            if ( track && EventTime > -1 ) {
+            if ( track ) {
               //if ( track->covt0t0() > 0. && abs(track->t0()) < 1 ) {
 	      if ( PackedCandidate_->timeError()>0. && abs(PackedCandidate_->time()) < 1 ) {  
 	        //track_time = track->t0();
@@ -631,6 +630,15 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             }else if(packed_candidate && packed_candidate->hasTrackDetails()){//if PackedCandidate does not have TrackDetails this gives an Exception because unpackCovariance might be called for pseudoTrack/bestTrack
              track_ptr = &(packed_candidate->pseudoTrack());
             }
+            
+            
+            // if ((track_ptr->innerOk())){
+            //   Cpfcan_trk_z_[fillntupleentry] = track_ptr->innerPosition().z();
+            // }
+            // else{
+            //   Cpfcan_trk_z_[fillntupleentry] = -999;
+            // }
+           
             //get hit pattern information
             if(track_ptr){
              const reco::HitPattern &p = track_ptr->hitPattern();
@@ -669,9 +677,12 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
              int Cpfcan_nhitstripTECLayer7 = 0;
              int Cpfcan_nhitstripTECLayer8 = 0;
              int Cpfcan_nhitstripTECLayer9 = 0;
+             
              // loop over the hits of the track.
              //const static unsigned short LayerOffset = 3;
              //const static unsigned short LayerMask = 0xF;
+            
+            
              for(int nh = 0; nh < p.numberOfAllHits(reco::HitPattern::TRACK_HITS); nh++){
               uint32_t hit = p.getHitPattern(reco::HitPattern::TRACK_HITS, nh);
               if(p.validHitFilter(hit)){// if the hit is valid
@@ -877,6 +888,7 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
              Cpfcan_stripTIDLayersNull_[fillntupleentry] = 0;
              Cpfcan_stripTOBLayersNull_[fillntupleentry] = 0;
              Cpfcan_stripTECLayersNull_[fillntupleentry] = 0;
+             Cpfcan_z_[fillntupleentry] = -1000;
             }
         }
         else{// neutral candidates
