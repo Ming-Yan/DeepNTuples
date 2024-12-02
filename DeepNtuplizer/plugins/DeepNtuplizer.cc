@@ -33,13 +33,14 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
-
+#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 // for ivf
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/Candidate/interface/VertexCompositePtrCandidate.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "TLorentzVector.h"
+#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
 #include "DataFormats/BTauReco/interface/PixelClusterTagInfo.h"
 
@@ -164,7 +165,8 @@ DeepNtuplizer::DeepNtuplizer(const edm::ParameterSet& iConfig):
 
   jetinfo->setUseHerwigCompatibleMatching(useHerwigCompatibleMatching);
   jetinfo->setIsHerwig(isHerwig);
-
+  jetinfo->setgenVtxPositionToken(consumes<ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<float>, ROOT::Math::DefaultCoordinateSystemTag>>(iConfig.getParameter<edm::InputTag>("genvtx_pos")));
+  jetinfo->setgenVtxTimeToken(consumes<float>(iConfig.getParameter<edm::InputTag>("genvtx_t")));
   jetinfo->setGenJetMatchReclusterToken(consumes<edm::Association<reco::GenJetCollection>>(iConfig.getParameter<edm::InputTag>( "genJetMatchRecluster" )));
   jetinfo->setGenJetMatchWithNuToken(consumes<edm::Association<reco::GenJetCollection>>(iConfig.getParameter<edm::InputTag>( "genJetMatchWithNu" )));
   jetinfo->setGenJetMatchAllowDuplicatesToken(consumes<edm::Association<reco::GenJetCollection>>(iConfig.getParameter<edm::InputTag>( "genJetMatchAllowDuplicates" ))); 
@@ -264,7 +266,6 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   edm::Handle< edm::View<reco::BaseTagInfo> > pixHits;
   iEvent.getByToken(pixHitsToken_, pixHits);
-
   for(auto& m:modules_){
     m->setPrimaryVertices(vertices.product());
     m->setSecVertices(secvertices.product());
@@ -273,7 +274,7 @@ DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     m->readSetup(iSetup);
     m->readEvent(iEvent);
   }
-
+  
   std::vector<size_t> indices(jets->size());
   for(size_t i=0;i<jets->size();i++)
     indices.at(i)=i;

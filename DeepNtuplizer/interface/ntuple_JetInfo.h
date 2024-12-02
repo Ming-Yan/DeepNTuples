@@ -14,6 +14,7 @@
 #include <map>
 #include <string>
 
+#include "DataFormats/Math/interface/Point3D.h"
 /*
  * For global jet info such as eta, pt, gen info
  */
@@ -52,7 +53,17 @@ public:
 
     void setGenJetMatchReclusterToken(
             edm::EDGetTokenT<edm::Association<reco::GenJetCollection> > genJetMatchReclusterToken) {
+        
         genJetMatchReclusterToken_ = genJetMatchReclusterToken;
+    }
+    void setgenVtxPositionToken(edm::EDGetTokenT<ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<float>, ROOT::Math::DefaultCoordinateSystemTag>> genVtxPositionToken) {
+        std::cout<<"tokens are set"<<std::endl;
+        genVtxPositionToken_ = genVtxPositionToken;
+        std::cout<<"tokens set"<<std::endl;
+    }
+    void setgenVtxTimeToken( edm::EDGetTokenT<float> genVtxTimeToken) {
+        genVtxTimeToken_ = genVtxTimeToken;
+        
     }
 
     void setGenJetMatchWithNuToken(
@@ -105,6 +116,7 @@ public:
     edm::Handle<edm::ValueMap<float>> axis2Handle;
     edm::Handle<edm::ValueMap<int>> multHandle;
 
+    // edm::Handle<ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<float>, ROOT::Math::DefaultCoordinateSystemTag>> genVtxPositionHandle;
 
     edm::EDGetTokenT<edm::Association<reco::GenJetCollection> > genJetMatchReclusterToken_;
     edm::EDGetTokenT<edm::Association<reco::GenJetCollection> > genJetMatchWithNuToken_;
@@ -144,14 +156,16 @@ public:
     std::vector<float>  gen_particle_daughters_phi;
     std::vector<float>  gen_particle_daughters_mass;
     std::vector<int>    gen_particle_daughters_charge;
-
+    
     // Gen leptons from resonance decay 
     std::vector<TLorentzVector> genLepFromResonance4V_;
     std::vector<TLorentzVector> genMuonsFromResonance4V_;
     std::vector<TLorentzVector> genElectronsFromResonance4V_;
     std::vector<TLorentzVector> tau_gen_visible_;
     std::vector<TLorentzVector> tau_gen_;
+    std::vector<TLorentzVector> genvtx_;
     std::vector<int> tau_gen_charge_;
+    
     std::vector<unsigned int> tau_gen_nch_;
     std::vector<unsigned int> tau_gen_np0_;
     std::vector<unsigned int> tau_gen_nnh_;
@@ -166,6 +180,8 @@ public:
     std::vector<reco::GenParticle> Bhadron_;
     std::vector<reco::GenParticle> Bhadron_daughter_;
 
+    edm::EDGetTokenT<float> genVtxTimeToken_;
+    edm::EDGetTokenT<ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<float>, ROOT::Math::DefaultCoordinateSystemTag>> genVtxPositionToken_;
 
 
     bool useherwcompat_matching_;
@@ -212,10 +228,23 @@ public:
     int isPhysLeptonicB_C_;
     int isPhysTau_;
     int isPhysPU_;
- 
+
+    //genvtex
+    static constexpr size_t max_vtx=50;
+    float genvtx_time_;
+    float genvtx_z_;
+    float genvtx_t;
+    float genvtx_z;
+
     // global variables
-    float npv_;
+    int npv_;
+    int pv_num_;
     float npv_0_z_;
+    float pu_z_[max_vtx];
+    float pu_time_[max_vtx];
+    float pu_pthats_[max_vtx];
+    // std::vector<float> pu_z_;
+    // std::vector<float> pu_time_;
     float PU_rho_;
     float ntrueInt_;
     float rho_;
@@ -252,6 +281,7 @@ public:
     float y_axis1_;
     float y_axis2_;
     float y_pt_dr_log_;
+
 
     static constexpr std::size_t max_num_lept = 5;
     int muons_isLooseMuon_[max_num_lept];

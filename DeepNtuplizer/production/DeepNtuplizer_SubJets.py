@@ -140,7 +140,7 @@ updateJetCollection(
 #         jetSource = cms.InputTag('slimmedJets'),  # 'ak4Jets'
         jetCorrections = jetCorrectionsAK4,
         pfCandidates = cms.InputTag('packedPFCandidates'),
-        pvSource = cms.InputTag("offlineSlimmedPrimaryVertices"),
+        pvSource = cms.InputTag("offlineSlimmedPrimaryVertices4D"),
         svSource = cms.InputTag('slimmedSecondaryVertices'),
         muSource = cms.InputTag('slimmedMuons'),
         elSource = cms.InputTag('slimmedElectrons'),
@@ -231,7 +231,7 @@ updateJetCollection(
         jetSource = cms.InputTag('slimmedJetsAK8'),
         jetCorrections = jetCorrectionsAK8,
         pfCandidates = cms.InputTag('packedPFCandidates'),
-        pvSource = cms.InputTag("offlineSlimmedPrimaryVertices"),
+        pvSource = cms.InputTag("offlineSlimmedPrimaryVertices4D"),
         svSource = cms.InputTag('slimmedSecondaryVertices'),
         muSource = cms.InputTag('slimmedMuons'),
         elSource = cms.InputTag('slimmedElectrons'),

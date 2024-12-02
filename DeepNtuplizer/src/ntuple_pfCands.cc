@@ -523,7 +523,7 @@ bool ntuple_pfCands::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
             Cpfcan_vertex_etarel_[fillntupleentry]=etasign*(PackedCandidate_->vertex().eta()-jet.eta());
             Cpfcan_vertexRef_mass_[fillntupleentry]=PackedCandidate_->vertexRef()->p4().M();
 
-            // Cpfcan_trk_z_[fillntupleentry] = PackedCandidate_->bestTrack() ? PackedCandidate_->bestTrack()->dz(PackedCandidate_->vertexRef()->position()) : -999;
+            // Cpfcan_trk_z_[fillntupleentry] = PackedCandidate_->bestTrack() ?   : -999;
             // TLorentzVector p4_tplus(PackedCandidate_->bestTrack()->px(), PackedCandidate_->bestTrack()->py(), PackedCandidate_->bestTrack()->pz(), sqrt((tplus->p() * tplus->p()) + piMass2));
             Cpfcan_trk_z_[fillntupleentry] = PackedCandidate_->bestTrack() ? PackedCandidate_->bestTrack()->vz() : -999;
 

@@ -39,13 +39,16 @@ private:
     int sv_num_;
     int sv_p_num_;
     float nsv_;
+    int vtx_num_;
+    int nvtx_;
     std::string prefix_;
 
     edm::ESHandle<TransientTrackBuilder> builder;
     edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> track_builder_token_;
 
     static constexpr size_t max_sv=10;
-
+    static constexpr size_t max_vtx=300;
+    
     float sv_pt_[max_sv];
     float sv_px_[max_sv];
     float sv_py_[max_sv];
@@ -85,7 +88,12 @@ private:
     float sv_pfd3dsig_[max_sv];
     float sv_puppiw_[max_sv];
     float sv_charge_sum_[max_sv];
-
+    
+    float vtx_z_[max_vtx];
+    float vtx_time_[max_vtx];
+    float vtx_time_error_[max_vtx];
+    float vtx_time_ntrks_[max_vtx];
+   
     static const reco::Vertex * spvp_;
 
     static bool compareDxyDxyErr(const reco::VertexCompositePtrCandidate &sva,const reco::VertexCompositePtrCandidate &svb);

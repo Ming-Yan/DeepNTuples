@@ -10,7 +10,7 @@
 #include <vector>
 #include <algorithm>
 #include "DataFormats/Math/interface/deltaR.h"
-
+#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 using namespace std;
 
 void ntuple_JetInfo::getInput(const edm::ParameterSet& iConfig){
@@ -29,7 +29,7 @@ void ntuple_JetInfo::getInput(const edm::ParameterSet& iConfig){
 void ntuple_JetInfo::initBranches(TTree* tree){
 
     //more general event info, here applied per jet
-    addBranch(tree,"npv"    ,&npv_    ,"npv/F"    );
+    addBranch(tree,"npv"    ,&npv_    ,"npv/I"    );
     addBranch(tree,"rho", &rho_, "rho/F");
     addBranch(tree,"ntrueInt",&ntrueInt_,"ntrueInt/F");
     addBranch(tree,"event_no"    ,&event_no_    ,"event_no/I"    );
@@ -92,7 +92,12 @@ void ntuple_JetInfo::initBranches(TTree* tree){
     addBranch(tree, "Jet_timeError", &jet_timeError_, "Jet_timeError/f");
     addBranch(tree, "Jet_timeNtk", &jet_timeNtk_, "Jet_timeNtk/f");
     addBranch(tree, "Jet_timesig", &jet_timesig_, "Jet_timesig/f");
-
+    addBranch(tree, "genvtx_z", &genvtx_z_, "genvtx_z/f");
+    addBranch(tree, "genvtx_time", &genvtx_time_, "genvtx_time_/f");
+    addBranch(tree,"pv_num", &pv_num_,"pv_num_/I");
+    addBranch(tree,"pu_z", &pu_z_,"pu_z_[50]/F");
+    addBranch(tree,"pu_time", &pu_time_,"pu_time_[50]/F");
+    addBranch(tree,"pu_pthats", &pu_pthats_,"pu_pthats_[50]/F");
     if(1) // discriminators might need to be filled differently. FIXME
         for(auto& entry : discriminators_) {
             string better_name(entry.first);
@@ -102,7 +107,6 @@ void ntuple_JetInfo::initBranches(TTree* tree){
 }
 
 void ntuple_JetInfo::readEvent(const edm::Event& iEvent){
-
     iEvent.getByToken(qglToken_, qglHandle);
     iEvent.getByToken(ptDToken_, ptDHandle);
     iEvent.getByToken(axis2Token_, axis2Handle);
@@ -111,13 +115,17 @@ void ntuple_JetInfo::readEvent(const edm::Event& iEvent){
     iEvent.getByToken(genJetMatchReclusterToken_, genJetMatchRecluster);
     iEvent.getByToken(genJetMatchWithNuToken_, genJetMatchWithNu);
     iEvent.getByToken(genJetMatchAllowDuplicatesToken_, genJetMatchAllowDuplicates);
-
     iEvent.getByToken(genParticlesToken_, genParticlesHandle);
 
 
     iEvent.getByToken(muonsToken_, muonsHandle);
     iEvent.getByToken(electronsToken_, electronsHandle);
     iEvent.getByToken(puInfoToken_, PUInfo);
+    
+    const auto& genvtx_zpos = iEvent.get(genVtxPositionToken_).z();
+    const auto& genvtx_time = iEvent.get(genVtxTimeToken_);
+    genvtx_t = genvtx_time;
+    genvtx_z = genvtx_zpos;
     event_no_=iEvent.id().event();
 
     //presumably this whole part can be removed!
@@ -226,7 +234,7 @@ void ntuple_JetInfo::readEvent(const edm::Event& iEvent){
  // GEN particle information
  if(genParticlesHandle.isValid()){
    unsigned int igen = 0;
-   for (auto gens_iter = genParticlesHandle->begin(); gens_iter != genParticlesHandle->end(); ++gens_iter) {      
+   for (auto gens_iter = genParticlesHandle->begin(); gens_iter != genParticlesHandle->end(); ++gens_iter) { 
      if((abs(gens_iter->pdgId()) == 25 or abs(gens_iter->pdgId()) == 24 or abs(gens_iter->pdgId()) == 23) and
 	gens_iter->isLastCopy() and gens_iter->statusFlags().fromHardProcess()){ 
 
@@ -320,7 +328,8 @@ bool ntuple_JetInfo::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
     static float dRMatchingPF  = 0.1;
     static float ptGenLeptonMin = 8;
     static float ptGenTauVisibleMin = 15;
-
+    genvtx_z_ = genvtx_z;
+    genvtx_time_ = genvtx_t;
     // Gen leptons from resonance decay 
     std::vector<TLorentzVector> genLepFromResonance4V;
     std::vector<TLorentzVector> genMuonsFromResonance4V;
@@ -467,19 +476,39 @@ bool ntuple_JetInfo::fillBranches(const pat::Jet & jet, const size_t& jetidx, co
 
     npv_ = vertices()->size();
     npv_0_z_ = vertices()->at(0).z();
-
+    
     float PUrho = 0;
     std::vector<PileupSummaryInfo>::const_iterator ipu;
+    
     for(ipu = PUInfo->begin(); ipu != PUInfo->end(); ++ipu) {
 	    if ( ipu->getBunchCrossing() != 0 ) continue; // storing detailed PU info only for BX=0
+    //  pu_z_ = ipu->getPU_zpositions();
+    //  pu_time_ = ipu->getPU_times();
+      const auto& zpositions =ipu->getPU_zpositions();
+      const auto& times = ipu->getPU_times();
+      const auto& pthats = ipu->getPU_pT_hats();
+       std::vector<std::tuple<float, float, float>> pu_z_time_pthat_tuples;
 
-	    for (unsigned int i=0; i<ipu->getPU_zpositions().size(); ++i) {
-		    auto PU_z = (ipu->getPU_zpositions())[i];
-		//	std::cout << i << " " << PU_z << std::endl;
-		    if ( std::abs(PU_z - npv_0_z_) < 1) PUrho++;
-	    }
+        pv_num_ = 0;
+        for (unsigned int i = 0; i < zpositions.size(); ++i) {
+            pu_z_time_pthat_tuples.emplace_back(zpositions[i], times[i], pthats[i]);
+        }
+        // Sort the tuples based on pu_pthats
+      std::sort(pu_z_time_pthat_tuples.begin(), pu_z_time_pthat_tuples.end(),
+          [](const std::tuple<float, float, float>& a, const std::tuple<float, float, float>& b) {
+              return std::get<2>(a) > std::get<2>(b);
+          });
+	     for (const auto& tuple : pu_z_time_pthat_tuples) {
+        if (pv_num_ < 50) {
+            pu_z_[pv_num_] = std::get<0>(tuple);
+            pu_time_[pv_num_] = std::get<1>(tuple);
+            pu_pthats_[pv_num_] = std::get<2>(tuple);
+            pv_num_++;
+        }
+    }
 
     }	
+    
 	PUrho /= 20.;
 
 	 // std::cout << "====================" << std::endl; 

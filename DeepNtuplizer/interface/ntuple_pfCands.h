@@ -89,10 +89,8 @@ private:
     float  Cpfcan_trk_z_[max_pfcand_];
     float  Cpfcan_trk_time_[max_pfcand_];
     float  Cpfcan_trk_timeerror_[max_pfcand_];
-    float  Cpfcan_sv_z_[max_pfcand_];
     float  Cpfcan_sv_time_[max_pfcand_];
     float  Cpfcan_sv_z_[max_pfcand_];
-    float  Cpfcan_sv_time_[max_pfcand_];
     float  Npfcan_vertex_time_[max_pfcand_];
     float  Npfcan_pv_time_[max_pfcand_];
     // covariance

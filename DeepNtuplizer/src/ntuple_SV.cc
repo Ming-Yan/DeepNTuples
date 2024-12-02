@@ -205,6 +205,13 @@ void ntuple_SV::initBranches(TTree* tree){
     addBranch(tree,(prefix_+"sv_time_sig").c_str() ,&sv_time_sig_ ,(prefix_+"sv_time_sig_["+prefix_+"sv_num_]/F").c_str());
     addBranch(tree,(prefix_+"sv_time_error").c_str() ,&sv_time_error_ ,(prefix_+"sv_time_error_["+prefix_+"sv_num_]/F").c_str());
     addBranch(tree,(prefix_+"sv_time_ntrks").c_str() ,&sv_time_ntrks_ ,(prefix_+"sv_time_ntrks_["+prefix_+"sv_num_]/F").c_str());
+    addBranch(tree,(prefix_+"sv_time").c_str() ,&sv_time_ ,(prefix_+"sv_time_["+prefix_+"sv_num_]/F").c_str());
+    addBranch(tree, (prefix_ + "vtx_num").c_str(), &vtx_num_, (prefix_ + "vtx_num_/I").c_str());
+    addBranch(tree, (prefix_ + "vtx_time").c_str(), &vtx_time_, (prefix_ + "vtx_time_[" + prefix_ + "vtx_num_]/F").c_str());
+    addBranch(tree, (prefix_ + "vtx_time_error").c_str(), &vtx_time_error_, (prefix_ + "vtx_time_error_[" + prefix_ + "vtx_num_]/F").c_str());
+    addBranch(tree, (prefix_ + "vtx_time_ntrks").c_str(), &vtx_time_ntrks_, (prefix_ + "vtx_time_ntrks_[" + prefix_ + "vtx_num_]/F").c_str());
+    addBranch(tree, (prefix_ + "vtx_z").c_str(), &vtx_z_, (prefix_ + "vtx_z_[" + prefix_ + "vtx_num_]/F").c_str());
+    
 }
 
 
@@ -236,10 +243,22 @@ bool ntuple_SV::fillBranches(const pat::Jet & jet, const size_t& jetidx, const  
 
     const float jet_uncorr_e=jet.correctedJet("Uncorrected").energy();
     const reco::Vertex & pv =    vertices()->at(0);
+    
     math::XYZVector jetDir = jet.momentum().Unit();
     GlobalVector jetRefTrackDir(jet.px(),jet.py(),jet.pz());
 
     sv_num_ = 0;
+    vtx_num_ = 0;
+    nvtx_ = vertices()->size();
+    for (std::vector<reco::Vertex>::const_iterator it = vertices()->begin(); it != vertices()->end(); ++it) {
+      vtx_z_[vtx_num_] = it->z();
+      vtx_time_[vtx_num_] = it->t();
+      vtx_time_error_[vtx_num_] = it->tError();
+      vtx_time_ntrks_[vtx_num_] = it->nTracks();
+      vtx_num_++;
+    }
+    // std::cout<<vertices()->size()<<std::endl;
+    
     reco::VertexCompositePtrCandidateCollection cpvtx=*secVertices();
     spvp_ =   & vertices()->at(0);
     std::sort(cpvtx.begin(),cpvtx.end(),ntuple_SV::compareDxyDxyErr);
